@@ -58,28 +58,14 @@ class BookCatalogForm
                                                     : 'Optional. Example: 1010+ to display directly after 1010 in the table.'
                                             ),
 
-                                        Select::make('category')
+                                        TextInput::make('category')
                                             ->label(app()->getLocale() === 'ar' ? 'الصنف' : 'Category')
-                                            ->options([
-                                                'book' => app()->getLocale() === 'ar' ? 'كتاب' : 'Book',
-                                                'game' => app()->getLocale() === 'ar' ? 'لعبة' : 'Game',
-                                                'islamic' => app()->getLocale() === 'ar' ? 'إسلامي' : 'Islamic',
-                                            ])
-                                            ->required(),
+                                            ->required()
+                                            ->maxLength(50),
 
-                                        Select::make('publisher')
+                                        TextInput::make('publisher')
                                             ->label(app()->getLocale() === 'ar' ? 'الناشر' : 'Publisher')
-                                            ->options([
-                                                'dar_alburagh' => app()->getLocale() === 'ar'
-                                                    ? 'دار البراق لثقافة الأطفال'
-                                                    : 'Dar Al-Buraq for Children’s Culture',
-                                                'dar_maheroon' => app()->getLocale() === 'ar'
-                                                    ? 'دار ماهرون للنشر والتوزيع'
-                                                    : 'Dar Maheroon for Publishing and Distribution',
-                                                'supplies' => app()->getLocale() === 'ar'
-                                                    ? 'توريدات'
-                                                    : 'Supplies',
-                                            ]),
+                                            ->maxLength(150),
 
                                         TextInput::make('barcode')
                                             ->label(app()->getLocale() === 'ar' ? 'باركود الكتاب' : 'Barcode')
