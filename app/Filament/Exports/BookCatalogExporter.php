@@ -52,6 +52,22 @@ class BookCatalogExporter extends Exporter
 
         return [
             ExportColumn::make('catalog_number')->label('#'),
+            ExportColumn::make('category')
+                ->label($ar ? 'الصنف' : 'Category')
+                ->formatStateUsing(fn (?string $state): ?string => match ($state) {
+                    'book' => $ar ? 'كتاب' : 'Book',
+                    'game' => $ar ? 'لعبة' : 'Game',
+                    'islamic' => $ar ? 'إسلامي' : 'Islamic',
+                    default => $state,
+                }),
+            ExportColumn::make('publisher')
+                ->label($ar ? 'الناشر' : 'Publisher')
+                ->formatStateUsing(fn (?string $state): ?string => match ($state) {
+                    'dar_alburagh' => $ar ? 'دار البراق لثقافة الأطفال' : 'Dar Al-Buraq for Children’s Culture',
+                    'dar_maheroon' => $ar ? 'دار ماهرون للنشر والتوزيع' : 'Dar Maheroon for Publishing and Distribution',
+                    'supplies' => $ar ? 'توريدات' : 'Supplies',
+                    default => $state,
+                }),
             ExportColumn::make('barcode')->label($ar ? 'باركد الكتاب' : 'Barcode'),
             ExportColumn::make('series_name')->label($ar ? 'اسم السلسلة' : 'Series Name'),
             ExportColumn::make('title')->label($ar ? 'اسم الكتاب' : 'Book Title'),

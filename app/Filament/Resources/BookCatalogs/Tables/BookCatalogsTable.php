@@ -42,6 +42,34 @@ class BookCatalogsTable
                     ->height(52)
                     ->toggleable(),
 
+                TextColumn::make('category')
+                    ->width('90px')
+                    ->label(app()->getLocale() === 'ar' ? 'الصنف' : 'Category')
+                    ->formatStateUsing(fn (?string $state): ?string => match ($state) {
+                        'book' => app()->getLocale() === 'ar' ? 'كتاب' : 'Book',
+                        'game' => app()->getLocale() === 'ar' ? 'لعبة' : 'Game',
+                        'islamic' => app()->getLocale() === 'ar' ? 'إسلامي' : 'Islamic',
+                        default => $state,
+                    })
+                    ->searchable()
+                    ->toggleable(),
+
+                TextColumn::make('publisher')
+                    ->width('130px')
+                    ->label(app()->getLocale() === 'ar' ? 'الناشر' : 'Publisher')
+                    ->formatStateUsing(fn (?string $state): ?string => match ($state) {
+                        'dar_alburagh' => app()->getLocale() === 'ar'
+                            ? 'دار البراق لثقافة الأطفال'
+                            : 'Dar Al-Buraq for Children’s Culture',
+                        'dar_maheroon' => app()->getLocale() === 'ar'
+                            ? 'دار ماهرون للنشر والتوزيع'
+                            : 'Dar Maheroon for Publishing and Distribution',
+                        'supplies' => app()->getLocale() === 'ar' ? 'توريدات' : 'Supplies',
+                        default => $state,
+                    })
+                    ->searchable()
+                    ->toggleable(),
+
                 TextColumn::make('barcode')
                     ->width('138px')
                     ->label(app()->getLocale() === 'ar' ? 'باركد الكتاب' : 'Barcode')
