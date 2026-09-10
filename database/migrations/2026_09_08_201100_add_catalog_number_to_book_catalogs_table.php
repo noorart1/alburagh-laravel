@@ -32,9 +32,9 @@ return new class extends Migration
             });
 
         // All records must have a number.
-        DB::statement(
-            'ALTER TABLE book_catalogs MODIFY catalog_number INT UNSIGNED NOT NULL'
-        );
+        Schema::table('book_catalogs', function (Blueprint $table) {
+            $table->unsignedInteger('catalog_number')->nullable(false)->change();
+        });
 
         // Database-level protection against duplicates.
         Schema::table('book_catalogs', function (Blueprint $table) {
