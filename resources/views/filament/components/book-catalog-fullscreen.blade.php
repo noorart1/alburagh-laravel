@@ -317,23 +317,28 @@ STABLE COLUMN LAYOUT
     white-space: nowrap !important;
 }
 
-/* Sidebar */
+/* Sidebar — sits inline in the topbar, to the left of the user menu,
+   instead of floating mid-page. */
 #book-catalog-sidebar-toggle {
     position: fixed;
-    top: 92px;
-    right: 8px;
+    top: 12px;
+    right: 64px;
     z-index: 100050;
-    width: 38px;
-    height: 38px;
+    width: 34px;
+    height: 34px;
     border: 1px solid rgba(0,0,0,.12);
-    border-radius: 10px;
+    border-radius: 8px;
     display: inline-flex;
     align-items: center;
     justify-content: center;
     cursor: pointer;
-    box-shadow: 0 6px 18px rgba(0,0,0,.18);
-    font-size: 22px;
+    box-shadow: 0 2px 8px rgba(0,0,0,.12);
+    font-size: 16px;
     line-height: 1;
+}
+
+#book-catalog-sidebar-toggle:hover {
+    box-shadow: 0 4px 12px rgba(0,0,0,.18);
 }
 
 body.book-catalog-sidebar-collapsed .fi-sidebar {
@@ -952,7 +957,12 @@ body:has(form#form) .fi-page-header-actions .fi-btn {
         document.body.classList.contains('book-catalog-sidebar-collapsed');
 
     const syncSidebarButton = () => {
-        sidebarButton.textContent = isCollapsed() ? '❮' : '❯';
+        const collapsed = isCollapsed();
+
+        sidebarButton.textContent = collapsed ? '❮' : '❯';
+        sidebarButton.title = collapsed
+            ? (document.documentElement.lang === 'ar' ? 'إظهار القائمة الجانبية' : 'Show sidebar')
+            : (document.documentElement.lang === 'ar' ? 'تكبير العرض (بدون ملء الشاشة)' : 'Widen view (not fullscreen)');
     };
 
     const setSidebarCollapsed = (collapsed, persist = true) => {
