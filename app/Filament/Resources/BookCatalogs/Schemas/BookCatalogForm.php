@@ -4,6 +4,7 @@ namespace App\Filament\Resources\BookCatalogs\Schemas;
 
 use App\Models\BookCatalog;
 use Filament\Forms\Components\FileUpload;
+use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Schemas\Components\Grid;
@@ -57,8 +58,35 @@ class BookCatalogForm
                                                     : 'Optional. Example: 1010+ to display directly after 1010 in the table.'
                                             ),
 
+                                        Select::make('category')
+                                            ->label(app()->getLocale() === 'ar' ? 'الصنف' : 'Category')
+                                            ->options([
+                                                'book' => app()->getLocale() === 'ar' ? 'كتاب' : 'Book',
+                                                'game' => app()->getLocale() === 'ar' ? 'لعبة' : 'Game',
+                                                'islamic' => app()->getLocale() === 'ar' ? 'إسلامي' : 'Islamic',
+                                            ])
+                                            ->native(false)
+                                            ->searchable()
+                                            ->required(),
+
+                                        Select::make('publisher')
+                                            ->label(app()->getLocale() === 'ar' ? 'الناشر' : 'Publisher')
+                                            ->options([
+                                                'dar_alburagh' => app()->getLocale() === 'ar'
+                                                    ? 'دار البراق لثقافة الأطفال'
+                                                    : 'Dar Al-Buraq for Children’s Culture',
+                                                'dar_maheroon' => app()->getLocale() === 'ar'
+                                                    ? 'دار ماهرون للنشر والتوزيع'
+                                                    : 'Dar Maheroon for Publishing and Distribution',
+                                                'supplies' => app()->getLocale() === 'ar'
+                                                    ? 'توريدات'
+                                                    : 'Supplies',
+                                            ])
+                                            ->native(false)
+                                            ->searchable(),
+
                                         TextInput::make('barcode')
-                                            ->label(app()->getLocale() === 'ar' ? 'باركد الكتاب' : 'Barcode')
+                                            ->label(app()->getLocale() === 'ar' ? 'باركود الكتاب' : 'Barcode')
                                             ->maxLength(50),
 
                                         TextInput::make('series_name')

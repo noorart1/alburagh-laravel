@@ -6,5 +6,5 @@ use Illuminate\Database\Eloquent\Model;
 
 class BookCatalog extends Model
 {
-    //
+    protected $guarded = [];
 }
