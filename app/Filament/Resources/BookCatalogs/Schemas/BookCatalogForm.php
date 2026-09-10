@@ -65,8 +65,6 @@ class BookCatalogForm
                                                 'game' => app()->getLocale() === 'ar' ? 'لعبة' : 'Game',
                                                 'islamic' => app()->getLocale() === 'ar' ? 'إسلامي' : 'Islamic',
                                             ])
-                                            ->native(false)
-                                            ->searchable()
                                             ->required(),
 
                                         Select::make('publisher')
@@ -81,9 +79,7 @@ class BookCatalogForm
                                                 'supplies' => app()->getLocale() === 'ar'
                                                     ? 'توريدات'
                                                     : 'Supplies',
-                                            ])
-                                            ->native(false)
-                                            ->searchable(),
+                                            ]),
 
                                         TextInput::make('barcode')
                                             ->label(app()->getLocale() === 'ar' ? 'باركود الكتاب' : 'Barcode')
