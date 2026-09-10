@@ -58,14 +58,32 @@ class BookCatalogForm
                                                     : 'Optional. Example: 1010+ to display directly after 1010 in the table.'
                                             ),
 
-                                        TextInput::make('category')
+                                        Select::make('category')
                                             ->label(app()->getLocale() === 'ar' ? 'الصنف' : 'Category')
-                                            ->required()
-                                            ->maxLength(50),
+                                            ->options([
+                                                'book' => app()->getLocale() === 'ar' ? 'كتاب' : 'Book',
+                                                'game' => app()->getLocale() === 'ar' ? 'لعبة' : 'Game',
+                                                'islamic' => app()->getLocale() === 'ar' ? 'إسلامي' : 'Islamic',
+                                            ])
+                                            ->native(false)
+                                            ->searchable()
+                                            ->required(),
 
-                                        TextInput::make('publisher')
+                                        Select::make('publisher')
                                             ->label(app()->getLocale() === 'ar' ? 'الناشر' : 'Publisher')
-                                            ->maxLength(150),
+                                            ->options([
+                                                'dar_alburagh' => app()->getLocale() === 'ar'
+                                                    ? 'دار البراق لثقافة الأطفال'
+                                                    : 'Dar Al-Buraq for Children’s Culture',
+                                                'dar_maheroon' => app()->getLocale() === 'ar'
+                                                    ? 'دار ماهرون للنشر والتوزيع'
+                                                    : 'Dar Maheroon for Publishing and Distribution',
+                                                'supplies' => app()->getLocale() === 'ar'
+                                                    ? 'توريدات'
+                                                    : 'Supplies',
+                                            ])
+                                            ->native(false)
+                                            ->searchable(),
 
                                         TextInput::make('barcode')
                                             ->label(app()->getLocale() === 'ar' ? 'باركود الكتاب' : 'Barcode')
