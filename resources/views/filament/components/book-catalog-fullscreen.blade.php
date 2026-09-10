@@ -102,6 +102,42 @@ $isBookCatalogIndex = request()->is('admin/book-catalogs');
     background: rgba(255,255,255,.05);
 }
 
+/* Bottom pinned scrollbar — always visible while the table overflows,
+   regardless of vertical scroll position (independent of #bc-pin-wrap,
+   which only shows once the header has scrolled out of view). */
+#bc-bottom-scroll {
+    position: fixed;
+    bottom: 0;
+    z-index: 99999;
+    display: none;
+    height: 17px;
+    overflow-x: auto;
+    overflow-y: hidden;
+    border-top: 1px solid rgba(255,255,255,.10);
+    box-shadow: 0 -4px 14px rgba(0,0,0,.22);
+}
+
+#bc-bottom-scroll.is-visible {
+    display: block;
+}
+
+#bc-bottom-scroll-inner {
+    height: 1px;
+}
+
+#bc-bottom-scroll::-webkit-scrollbar {
+    height: 12px;
+}
+
+#bc-bottom-scroll::-webkit-scrollbar-thumb {
+    background: rgba(160,160,160,.75);
+    border-radius: 10px;
+}
+
+#bc-bottom-scroll::-webkit-scrollbar-track {
+    background: rgba(255,255,255,.05);
+}
+
 #bc-head-viewport {
     width: 100%;
     overflow: hidden;
@@ -128,6 +164,7 @@ THEME SAFE — بدون دست‌زدن به منطق Scroll
 /* Light */
 html:not(.dark) #bc-pin-wrap,
 html:not(.dark) #bc-top-scroll,
+html:not(.dark) #bc-bottom-scroll,
 html:not(.dark) #bc-head-table,
 html:not(.dark) #bc-head-table th {
     background: #e7e9ec !important;
@@ -150,6 +187,7 @@ html:not(.dark) #book-catalog-popover-close {
 /* Dark */
 html.dark #bc-pin-wrap,
 html.dark #bc-top-scroll,
+html.dark #bc-bottom-scroll,
 html.dark #bc-head-table,
 html.dark #bc-head-table th {
     background: #34373c !important;
@@ -610,6 +648,10 @@ body:has(form#form) .fi-page-header-actions .fi-btn {
     </div>
 </div>
 
+<div id="bc-bottom-scroll">
+    <div id="bc-bottom-scroll-inner"></div>
+</div>
+
 <div id="book-catalog-popover">
     <div id="book-catalog-popover-header">
         <div id="book-catalog-popover-title"></div>
@@ -630,6 +672,9 @@ body:has(form#form) .fi-page-header-actions .fi-btn {
     const topScroll = document.getElementById('bc-top-scroll');
     const topScrollInner = document.getElementById('bc-top-scroll-inner');
     const headTable = document.getElementById('bc-head-table');
+
+    const bottomScroll = document.getElementById('bc-bottom-scroll');
+    const bottomScrollInner = document.getElementById('bc-bottom-scroll-inner');
 
     const sidebarButton = document.getElementById('book-catalog-sidebar-toggle');
     const leftButton = document.getElementById('book-catalog-scroll-left');
@@ -676,6 +721,7 @@ body:has(form#form) .fi-page-header-actions .fi-btn {
 
         if (!table) {
             pinWrap.classList.remove('is-visible');
+            bottomScroll.classList.remove('is-visible');
             return false;
         }
 
@@ -684,6 +730,7 @@ body:has(form#form) .fi-page-header-actions .fi-btn {
 
         if (!thead || !scrollHost) {
             pinWrap.classList.remove('is-visible');
+            bottomScroll.classList.remove('is-visible');
             return false;
         }
 
@@ -713,6 +760,9 @@ body:has(form#form) .fi-page-header-actions .fi-btn {
         pinWrap.style.left = `${Math.max(0, hostRect.left)}px`;
         pinWrap.style.width = `${Math.max(0, hostRect.width)}px`;
         pinWrap.style.top = `${getTopOffset()}px`;
+
+        bottomScroll.style.left = `${Math.max(0, hostRect.left)}px`;
+        bottomScroll.style.width = `${Math.max(0, hostRect.width)}px`;
 
         const clone = thead.cloneNode(true);
 
@@ -744,6 +794,7 @@ body:has(form#form) .fi-page-header-actions .fi-btn {
         headTable.style.minWidth = `${totalWidth}px`;
         headTable.style.maxWidth = `${totalWidth}px`;
         topScrollInner.style.width = `${Math.max(table.scrollWidth, totalWidth)}px`;
+        bottomScrollInner.style.width = `${Math.max(table.scrollWidth, totalWidth)}px`;
 
         const clonedHeaders = [...clone.querySelectorAll('th')];
 
@@ -784,6 +835,7 @@ body:has(form#form) .fi-page-header-actions .fi-btn {
         const x = scrollHost.scrollLeft;
 
         topScroll.scrollLeft = x;
+        bottomScroll.scrollLeft = x;
         headTable.style.transform = `translateX(${-x}px)`;
     }
 
@@ -793,7 +845,20 @@ body:has(form#form) .fi-page-header-actions .fi-btn {
         syncing = true;
 
         scrollHost.scrollLeft = topScroll.scrollLeft;
+        bottomScroll.scrollLeft = topScroll.scrollLeft;
         headTable.style.transform = `translateX(${-topScroll.scrollLeft}px)`;
+
+        requestAnimationFrame(() => syncing = false);
+    }, { passive: true });
+
+    bottomScroll.addEventListener('scroll', () => {
+        if (!scrollHost || syncing) return;
+
+        syncing = true;
+
+        scrollHost.scrollLeft = bottomScroll.scrollLeft;
+        topScroll.scrollLeft = bottomScroll.scrollLeft;
+        headTable.style.transform = `translateX(${-bottomScroll.scrollLeft}px)`;
 
         requestAnimationFrame(() => syncing = false);
     }, { passive: true });
@@ -820,6 +885,10 @@ body:has(form#form) .fi-page-header-actions .fi-btn {
 
         leftButton?.classList.toggle('is-visible', overflow);
         rightButton?.classList.toggle('is-visible', overflow);
+
+        // Always pinned at the bottom of the viewport whenever the table
+        // overflows horizontally, independent of vertical scroll position.
+        bottomScroll.classList.toggle('is-visible', overflow);
     }
 
     /* وقتی عرض Sidebar/Main تغییر می‌کند Header فوراً دوباره هم‌تراز می‌شود. */
