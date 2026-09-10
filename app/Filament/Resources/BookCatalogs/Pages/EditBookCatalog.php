@@ -6,10 +6,18 @@ use App\Filament\Resources\BookCatalogs\BookCatalogResource;
 use Filament\Actions\Action;
 use Filament\Actions\DeleteAction;
 use Filament\Resources\Pages\EditRecord;
+use Illuminate\Support\Facades\Log;
 
 class EditBookCatalog extends EditRecord
 {
     protected static string $resource = BookCatalogResource::class;
+
+    protected function mutateFormDataBeforeSave(array $data): array
+    {
+        Log::info('DEBUG BookCatalog save data', $data);
+
+        return $data;
+    }
 
     protected function getHeaderActions(): array
     {
