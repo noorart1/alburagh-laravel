@@ -114,6 +114,18 @@ class BookCatalogExporter extends Exporter
         $sheet->setSheetView($sheetView);
         $sheet->setName('الكتب');
 
+        // OpenSpout can't measure rendered text, so this approximates
+        // autofit with generous per-column widths instead of the cramped default.
+        $widths = [
+            8, 16, 18, 26, 12, 30, 20, 18, 18, 10,
+            14, 10, 40, 10, 10, 10, 10, 14, 10, 14,
+            10, 12,
+        ];
+
+        foreach ($widths as $index => $width) {
+            $sheet->setColumnWidth((float) $width, $index + 1);
+        }
+
         return $writer;
     }
 
