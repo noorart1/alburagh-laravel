@@ -4,6 +4,7 @@ namespace App\Filament\Resources\BookCatalogs\Tables;
 
 use App\Models\BookCatalog;
 use App\Filament\Exports\BookCatalogExporter;
+use App\Filament\Resources\BookCatalogs\BookCatalogResource;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\ExportBulkAction;
@@ -186,6 +187,7 @@ class BookCatalogsTable
                     ->searchable()
                     ->toggleable(),
             ])
+            ->recordUrl(fn (BookCatalog $record): string => BookCatalogResource::getUrl('edit', ['record' => $record]))
             ->recordActions([
                 ViewAction::make()
                     ->label(app()->getLocale() === 'ar' ? 'عرض' : 'View'),
