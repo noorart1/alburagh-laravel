@@ -1,0 +1,10 @@
+[27-Aug-2026 14:46:41 UTC] PHP Warning:  require(/home/iutfcdpi/alburagh-laravel/vendor/autoload.php): Failed to open stream: No such file or directory in /home/iutfcdpi/public_html/alburagh-laravel/public/index.php on line 13
+[27-Aug-2026 14:46:41 UTC] PHP Fatal error:  Uncaught Error: Failed opening required '/home/iutfcdpi/alburagh-laravel/vendor/autoload.php' (include_path='.:/opt/alt/php83/usr/share/pear:/opt/alt/php83/usr/share/php:/usr/share/pear:/usr/share/php') in /home/iutfcdpi/public_html/alburagh-laravel/public/index.php:13
+Stack trace:
+#0 {main}
+  thrown in /home/iutfcdpi/public_html/alburagh-laravel/public/index.php on line 13
+[27-Aug-2026 14:46:50 UTC] PHP Warning:  require(/home/iutfcdpi/alburagh-laravel/vendor/autoload.php): Failed to open stream: No such file or directory in /home/iutfcdpi/public_html/alburagh-laravel/public/index.php on line 13
+[27-Aug-2026 14:46:50 UTC] PHP Fatal error:  Uncaught Error: Failed opening required '/home/iutfcdpi/alburagh-laravel/vendor/autoload.php' (include_path='.:/opt/alt/php83/usr/share/pear:/opt/alt/php83/usr/share/php:/usr/share/pear:/usr/share/php') in /home/iutfcdpi/public_html/alburagh-laravel/public/index.php:13
+Stack trace:
+#0 {main}
+  thrown in /home/iutfcdpi/public_html/alburagh-laravel/public/index.php on line 13
