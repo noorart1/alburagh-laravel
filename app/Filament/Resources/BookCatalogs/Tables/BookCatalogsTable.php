@@ -64,6 +64,7 @@ class BookCatalogsTable
                     ->toggleable(),
                 TextColumn::make('category')
                     ->width('90px')
+                    ->limit(17)
                     ->label(app()->getLocale() === 'ar' ? 'الصنف' : 'Category')
                     ->formatStateUsing(fn (?string $state): ?string => match ($state) {
                         'book' => app()->getLocale() === 'ar' ? 'كتاب' : 'Book',
@@ -75,7 +76,8 @@ class BookCatalogsTable
                     ->toggleable(),
 
                 TextColumn::make('publisher')
-                    ->width('130px')
+                    ->width('60px')
+                    ->limit(17)
                     ->label(app()->getLocale() === 'ar' ? 'الناشر' : 'Publisher')
                     ->formatStateUsing(fn (?string $state): ?string => match ($state) {
                         'dar_alburagh' => app()->getLocale() === 'ar'
