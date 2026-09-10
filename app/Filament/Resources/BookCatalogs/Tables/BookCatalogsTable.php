@@ -42,6 +42,26 @@ class BookCatalogsTable
                     ->height(52)
                     ->toggleable(),
 
+                TextColumn::make('barcode')
+                    ->width('138px')
+                    ->label(app()->getLocale() === 'ar' ? 'باركد الكتاب' : 'Barcode')
+                    ->searchable()
+                    ->copyable()
+                    ->toggleable(),
+
+                TextColumn::make('series_name')
+                    ->width('55px')
+                    ->label(app()->getLocale() === 'ar' ? 'اسم السلسلة' : 'Series Name')
+                    ->searchable()
+                    ->limit(14)
+                    ->toggleable(),
+
+                TextColumn::make('title')
+                    ->width('68px')
+                    ->label(app()->getLocale() === 'ar' ? 'اسم الكتاب' : 'Book Title')
+                    ->searchable()
+                    ->limit(17)
+                    ->toggleable(),
                 TextColumn::make('category')
                     ->width('90px')
                     ->label(app()->getLocale() === 'ar' ? 'الصنف' : 'Category')
@@ -69,28 +89,6 @@ class BookCatalogsTable
                     })
                     ->searchable()
                     ->toggleable(),
-
-                TextColumn::make('barcode')
-                    ->width('138px')
-                    ->label(app()->getLocale() === 'ar' ? 'باركد الكتاب' : 'Barcode')
-                    ->searchable()
-                    ->copyable()
-                    ->toggleable(),
-
-                TextColumn::make('series_name')
-                    ->width('55px')
-                    ->label(app()->getLocale() === 'ar' ? 'اسم السلسلة' : 'Series Name')
-                    ->searchable()
-                    ->limit(14)
-                    ->toggleable(),
-
-                TextColumn::make('title')
-                    ->width('68px')
-                    ->label(app()->getLocale() === 'ar' ? 'اسم الكتاب' : 'Book Title')
-                    ->searchable()
-                    ->limit(17)
-                    ->toggleable(),
-
                 TextColumn::make('author')
                     ->width('105px')
                     ->label(app()->getLocale() === 'ar' ? 'اسم المؤلف' : 'Author')
