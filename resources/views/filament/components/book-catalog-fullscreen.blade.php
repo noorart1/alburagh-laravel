@@ -640,6 +640,22 @@ body:has(form#form) .fi-page-header-actions .fi-btn {
 .fi-topbar + * {
     margin-top: 0 !important;
 }
+
+/* خود نوار بالای پنل هم جمع‌تر شود تا جدول تقریباً بلافاصله بعد از
+   نوار آدرس مرورگر شروع شود. */
+.fi-topbar {
+    min-height: 0 !important;
+    padding-block: 4px !important;
+}
+
+.fi-topbar .fi-topbar-item-btn,
+.fi-topbar .fi-icon-btn {
+    padding: 4px !important;
+}
+
+.fi-topbar .fi-logo {
+    height: 1.5rem !important;
+}
 @endif
 
 </style>
