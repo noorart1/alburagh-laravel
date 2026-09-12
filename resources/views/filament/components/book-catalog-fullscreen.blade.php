@@ -610,6 +610,19 @@ body:has(form#form) .fi-page-header-actions .fi-btn {
     margin-bottom: 0 !important;
 }
 
+/* عنوان صفحه (الكتب) به همان ردیف جستجو/دکمه‌ها منتقل می‌شود (به‌وسیله JS)،
+   بنابراین نسخهٔ اصلی‌اش بالای صفحه دیگر نمایش داده نمی‌شود. */
+.fi-header-heading {
+    display: none !important;
+}
+
+#bc-pinned-heading {
+    font-size: 1.1rem;
+    font-weight: 700;
+    white-space: nowrap;
+    margin-inline-end: 8px;
+}
+
 /* کارت جدول بدون فاصله بالایی */
 .fi-ta-ctn,
 .fi-ta-main,
@@ -951,6 +964,29 @@ html.dark .fi-no-notification[class*="warning"] {
         updateArrows();
     }
 
+    // عنوان صفحه («الكتب») را در همان ردیف جستجو/دکمه‌ها نشان می‌دهد،
+    // به‌جای ردیف جداگانه‌اش بالای صفحه (که در CSS مخفی شده است).
+    // Clone می‌شود نه Move، چون Livewire هنگام رفرش جدول محتوای
+    // toolbar را بازسازی می‌کند و یک node منتقل‌شده را از دست می‌دهد.
+    function pinHeadingIntoToolbar() {
+        const heading = document.querySelector('.fi-header-heading');
+        const toolbar = document.querySelector('.fi-ta-header-toolbar');
+
+        if (!heading || !toolbar) return;
+
+        let pinned = toolbar.querySelector('#bc-pinned-heading');
+
+        if (!pinned) {
+            pinned = document.createElement('div');
+            pinned.id = 'bc-pinned-heading';
+            toolbar.insertBefore(pinned, toolbar.firstChild);
+        }
+
+        if (pinned.textContent !== heading.textContent) {
+            pinned.textContent = heading.textContent;
+        }
+    }
+
     function bindScrollHost() {
         if (!scrollHost || scrollHost.dataset.bcBound === '1') return;
 
@@ -1059,6 +1095,8 @@ html.dark .fi-no-notification[class*="warning"] {
 
     const observer = new MutationObserver(() => {
         const oldTable = table;
+
+        pinHeadingIntoToolbar();
 
         if (discover()) {
             if (table !== oldTable) {
@@ -1175,6 +1213,7 @@ html.dark .fi-no-notification[class*="warning"] {
     });
 
     rebuildHeader();
+    pinHeadingIntoToolbar();
 })();
 </script>
 @endif
