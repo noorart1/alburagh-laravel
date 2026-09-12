@@ -101,6 +101,13 @@ class BookCatalogExporter extends Exporter
         ];
     }
 
+    public function getJobConnection(): ?string
+    {
+        // Runs the export synchronously so its completion notification shows
+        // as an immediate toast instead of silently landing in the bell.
+        return 'sync';
+    }
+
     public function makeXlsxHeaderRow(array $values, ?Style $style = null): Row
     {
         $this->trackColumnWidths($values);
