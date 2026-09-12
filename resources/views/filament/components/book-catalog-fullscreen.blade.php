@@ -620,7 +620,6 @@ body:has(form#form) .fi-page-header-actions .fi-btn {
     font-size: 1.1rem;
     font-weight: 700;
     white-space: nowrap;
-    margin-inline-end: 8px;
 }
 
 /* کارت جدول بدون فاصله بالایی */
@@ -970,16 +969,16 @@ html.dark .fi-no-notification[class*="warning"] {
     // toolbar را بازسازی می‌کند و یک node منتقل‌شده را از دست می‌دهد.
     function pinHeadingIntoToolbar() {
         const heading = document.querySelector('.fi-header-heading');
-        const toolbar = document.querySelector('.fi-ta-header-toolbar');
+        const actions = document.querySelector('.fi-ta-header-toolbar .fi-ta-actions');
 
-        if (!heading || !toolbar) return;
+        if (!heading || !actions) return;
 
-        let pinned = toolbar.querySelector('#bc-pinned-heading');
+        let pinned = actions.querySelector('#bc-pinned-heading');
 
         if (!pinned) {
             pinned = document.createElement('div');
             pinned.id = 'bc-pinned-heading';
-            toolbar.insertBefore(pinned, toolbar.firstChild);
+            actions.appendChild(pinned);
         }
 
         if (pinned.textContent !== heading.textContent) {
