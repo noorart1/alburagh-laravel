@@ -321,10 +321,13 @@ STABLE COLUMN LAYOUT
     white-space: nowrap !important;
 }
 
-/* Sidebar toggle — pinned into the table toolbar row (next to search),
-   instead of floating fixed mid-page. */
+/* Sidebar toggle — fixed near the topbar/avatar, like claude.ai's
+   panel toggle sitting next to its logo. */
 #book-catalog-sidebar-toggle {
-    flex-shrink: 0;
+    position: fixed;
+    top: 12px;
+    right: 64px;
+    z-index: 100050;
     width: 34px;
     height: 34px;
     padding: 0;
@@ -1016,20 +1019,6 @@ html.dark .fi-no-notification[class*="warning"] {
         }
     }
 
-    // دکمهٔ Sidebar Toggle را هم به همان ردیف منتقل می‌کند.
-    // خودِ node واقعی (نه Clone) جابه‌جا می‌شود چون Listener/حالت
-    // (❯/❮) رویش تعریف شده؛ چون این node توسط ما ساخته شده نه
-    // Livewire، اگر جایی حذف شود همچنان reference آن را داریم و
-    // دوباره همان node را برمی‌گردانیم، بدون از دست دادن Listener.
-    function pinSidebarToggleIntoToolbar() {
-        const toolbar = document.querySelector('.fi-ta-header-toolbar');
-
-        if (!toolbar || !sidebarButton) return;
-        if (sidebarButton.parentElement === toolbar) return;
-
-        toolbar.insertBefore(sidebarButton, toolbar.firstChild);
-    }
-
     function bindScrollHost() {
         if (!scrollHost || scrollHost.dataset.bcBound === '1') return;
 
@@ -1140,7 +1129,6 @@ html.dark .fi-no-notification[class*="warning"] {
         const oldTable = table;
 
         pinHeadingIntoToolbar();
-        pinSidebarToggleIntoToolbar();
 
         if (discover()) {
             if (table !== oldTable) {
@@ -1258,7 +1246,6 @@ html.dark .fi-no-notification[class*="warning"] {
 
     rebuildHeader();
     pinHeadingIntoToolbar();
-    pinSidebarToggleIntoToolbar();
 })();
 </script>
 @endif
