@@ -9,6 +9,8 @@ use Filament\Actions\Exports\Models\Export;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use OpenSpout\Common\Entity\Row;
+use OpenSpout\Common\Entity\Style\Border;
+use OpenSpout\Common\Entity\Style\BorderPart;
 use OpenSpout\Common\Entity\Style\CellAlignment;
 use OpenSpout\Common\Entity\Style\CellVerticalAlignment;
 use OpenSpout\Common\Entity\Style\Color;
@@ -121,9 +123,23 @@ class BookCatalogExporter extends Exporter
         return $writer;
     }
 
+    // Matches Excel's built-in "Output" cell style (Home > Cell Styles > Output).
+    private function outputStyleBorder(): Border
+    {
+        return new Border(
+            new BorderPart(Border::LEFT, '7F7F7F', Border::WIDTH_THIN),
+            new BorderPart(Border::RIGHT, '7F7F7F', Border::WIDTH_THIN),
+            new BorderPart(Border::TOP, '7F7F7F', Border::WIDTH_THIN),
+            new BorderPart(Border::BOTTOM, '7F7F7F', Border::WIDTH_THIN),
+        );
+    }
+
     public function getXlsxCellStyle(): ?Style
     {
         return (new Style())
+            ->setFontColor('3F3F3F')
+            ->setBackgroundColor(Color::toARGB('F2F2F2'))
+            ->setBorder($this->outputStyleBorder())
             ->setCellAlignment(CellAlignment::RIGHT)
             ->setCellVerticalAlignment(CellVerticalAlignment::CENTER);
     }
@@ -132,7 +148,9 @@ class BookCatalogExporter extends Exporter
     {
         return (new Style())
             ->setFontBold()
-            ->setBackgroundColor(Color::toARGB('E5E7EB'))
+            ->setFontColor('3F3F3F')
+            ->setBackgroundColor(Color::toARGB('F2F2F2'))
+            ->setBorder($this->outputStyleBorder())
             ->setCellAlignment(CellAlignment::RIGHT)
             ->setCellVerticalAlignment(CellVerticalAlignment::CENTER);
     }
