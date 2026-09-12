@@ -26,6 +26,9 @@ class BookCatalogExporter extends Exporter
     // Matches the admin panel's primary color (Color::Amber, shade 600).
     protected const BRAND_COLOR = 'D97706';
 
+    /** @var array<int, int> max value length seen per column, for autofit */
+    private array $columnWidths = [];
+
     public static function getOptionsFormComponents(): array
     {
         $ar = app()->getLocale() === 'ar';
@@ -98,6 +101,29 @@ class BookCatalogExporter extends Exporter
         ];
     }
 
+    public function makeXlsxHeaderRow(array $values, ?Style $style = null): Row
+    {
+        $this->trackColumnWidths($values);
+
+        return parent::makeXlsxHeaderRow($values, $style);
+    }
+
+    public function makeXlsxRow(array $values, ?Style $style = null): Row
+    {
+        $this->trackColumnWidths($values);
+
+        return parent::makeXlsxRow($values, $style);
+    }
+
+    /** @param array<mixed> $values */
+    private function trackColumnWidths(array $values): void
+    {
+        foreach (array_values($values) as $index => $value) {
+            $length = mb_strlen((string) $value);
+            $this->columnWidths[$index] = max($this->columnWidths[$index] ?? 0, $length);
+        }
+    }
+
     public function getXlsxWriterOptions(): ?Options
     {
         $options = new Options();
@@ -163,6 +189,12 @@ class BookCatalogExporter extends Exporter
         $sheet = $writer->getCurrentSheet();
         $sheet->setSheetView($sheetView);
         $sheet->setName('الكتب');
+
+        // OpenSpout can't measure rendered text, so approximate autofit
+        // from the actual exported value lengths instead of a fixed guess.
+        foreach ($this->columnWidths as $index => $length) {
+            $sheet->setColumnWidth((float) min(max($length + 2, 8), 50), $index + 1);
+        }
 
         return $writer;
     }
