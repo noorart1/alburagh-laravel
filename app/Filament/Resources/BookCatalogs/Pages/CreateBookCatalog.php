@@ -11,6 +11,11 @@ class CreateBookCatalog extends CreateRecord
 {
     protected static string $resource = BookCatalogResource::class;
 
+    protected function getRedirectUrl(): string
+    {
+        return $this->getResource()::getUrl('index');
+    }
+
     protected function handleRecordCreation(array $data): Model
     {
         $record = new BookCatalog();
