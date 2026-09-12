@@ -341,11 +341,6 @@ STABLE COLUMN LAYOUT
 #book-catalog-sidebar-toggle svg {
     width: 16px;
     height: 16px;
-    transition: transform .15s ease;
-}
-
-#book-catalog-sidebar-toggle.is-collapsed svg {
-    transform: rotate(180deg);
 }
 
 html:not(.dark) #book-catalog-sidebar-toggle:hover {
@@ -827,8 +822,8 @@ html.dark .fi-no-notification[class*="warning"] {
 </div>
 
 <button type="button" id="book-catalog-sidebar-toggle">
-    <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-        <path d="M12.5 15 7.5 10l5-5" />
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M17.25 6.75 22.5 12l-5.25 5.25m-10.5 0L1.5 12l5.25-5.25" />
     </svg>
 </button>
 <button type="button" id="book-catalog-scroll-left" class="book-catalog-scroll-arrow">‹</button>
