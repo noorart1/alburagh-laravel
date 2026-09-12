@@ -207,6 +207,10 @@ html.dark #book-catalog-popover-close {
     color: #e5e7eb !important;
 }
 
+html.dark #book-catalog-sidebar-toggle:hover {
+    background-color: #3a3e44 !important;
+}
+
 /* Eye comfort rows */
 html:not(.dark) .fi-ta-table thead th {
     background: #e7e9ec !important;
@@ -323,19 +327,19 @@ STABLE COLUMN LAYOUT
     flex-shrink: 0;
     width: 34px;
     height: 34px;
-    border: 1px solid rgba(0,0,0,.12);
+    border: 1px solid rgba(0,0,0,.15);
     border-radius: 8px;
     display: inline-flex;
     align-items: center;
     justify-content: center;
     cursor: pointer;
-    box-shadow: 0 2px 8px rgba(0,0,0,.12);
     font-size: 16px;
     line-height: 1;
+    transition: background-color .1s ease;
 }
 
-#book-catalog-sidebar-toggle:hover {
-    box-shadow: 0 4px 12px rgba(0,0,0,.18);
+html:not(.dark) #book-catalog-sidebar-toggle:hover {
+    background-color: #e9eaec !important;
 }
 
 body.book-catalog-sidebar-collapsed .fi-sidebar {
