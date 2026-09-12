@@ -317,13 +317,10 @@ STABLE COLUMN LAYOUT
     white-space: nowrap !important;
 }
 
-/* Sidebar — sits inline in the topbar, to the left of the user menu,
-   instead of floating mid-page. */
+/* Sidebar toggle — pinned into the table toolbar row (next to search),
+   instead of floating fixed mid-page. */
 #book-catalog-sidebar-toggle {
-    position: fixed;
-    top: 12px;
-    right: 64px;
-    z-index: 100050;
+    flex-shrink: 0;
     width: 34px;
     height: 34px;
     border: 1px solid rgba(0,0,0,.12);
@@ -1006,6 +1003,20 @@ html.dark .fi-no-notification[class*="warning"] {
         }
     }
 
+    // دکمهٔ Sidebar Toggle را هم به همان ردیف منتقل می‌کند.
+    // خودِ node واقعی (نه Clone) جابه‌جا می‌شود چون Listener/حالت
+    // (❯/❮) رویش تعریف شده؛ چون این node توسط ما ساخته شده نه
+    // Livewire، اگر جایی حذف شود همچنان reference آن را داریم و
+    // دوباره همان node را برمی‌گردانیم، بدون از دست دادن Listener.
+    function pinSidebarToggleIntoToolbar() {
+        const toolbar = document.querySelector('.fi-ta-header-toolbar');
+
+        if (!toolbar || !sidebarButton) return;
+        if (sidebarButton.parentElement === toolbar) return;
+
+        toolbar.insertBefore(sidebarButton, toolbar.firstChild);
+    }
+
     function bindScrollHost() {
         if (!scrollHost || scrollHost.dataset.bcBound === '1') return;
 
@@ -1116,6 +1127,7 @@ html.dark .fi-no-notification[class*="warning"] {
         const oldTable = table;
 
         pinHeadingIntoToolbar();
+        pinSidebarToggleIntoToolbar();
 
         if (discover()) {
             if (table !== oldTable) {
@@ -1233,6 +1245,7 @@ html.dark .fi-no-notification[class*="warning"] {
 
     rebuildHeader();
     pinHeadingIntoToolbar();
+    pinSidebarToggleIntoToolbar();
 })();
 </script>
 @endif
