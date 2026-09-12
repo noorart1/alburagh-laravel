@@ -616,7 +616,14 @@ body:has(form#form) .fi-page-header-actions .fi-btn {
     display: none !important;
 }
 
+/* بدون این override، space-between توی toolbar، عنوان را از
+   دکمهٔ toggle/جستجو دور نگه می‌داشت حتی وقتی کنارشان قرار می‌گرفت. */
+.fi-ta-header-toolbar {
+    justify-content: flex-start !important;
+}
+
 #bc-pinned-heading {
+    order: -1;
     font-size: 1.1rem;
     font-weight: 700;
     white-space: nowrap;
@@ -969,16 +976,16 @@ html.dark .fi-no-notification[class*="warning"] {
     // toolbar را بازسازی می‌کند و یک node منتقل‌شده را از دست می‌دهد.
     function pinHeadingIntoToolbar() {
         const heading = document.querySelector('.fi-header-heading');
-        const actions = document.querySelector('.fi-ta-header-toolbar .fi-ta-actions');
+        const toolbar = document.querySelector('.fi-ta-header-toolbar');
 
-        if (!heading || !actions) return;
+        if (!heading || !toolbar) return;
 
-        let pinned = actions.querySelector('#bc-pinned-heading');
+        let pinned = toolbar.querySelector('#bc-pinned-heading');
 
         if (!pinned) {
             pinned = document.createElement('div');
             pinned.id = 'bc-pinned-heading';
-            actions.appendChild(pinned);
+            toolbar.insertBefore(pinned, toolbar.firstChild);
         }
 
         if (pinned.textContent !== heading.textContent) {
