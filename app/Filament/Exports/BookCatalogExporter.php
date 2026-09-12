@@ -132,8 +132,7 @@ class BookCatalogExporter extends Exporter
     {
         return (new Style())
             ->setFontBold()
-            ->setFontColor(Color::WHITE)
-            ->setBackgroundColor(Color::toARGB(self::BRAND_COLOR))
+            ->setBackgroundColor(Color::toARGB('E5E7EB'))
             ->setCellAlignment(CellAlignment::RIGHT)
             ->setCellVerticalAlignment(CellVerticalAlignment::CENTER);
     }
