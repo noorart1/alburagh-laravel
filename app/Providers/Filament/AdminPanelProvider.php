@@ -22,6 +22,7 @@ use Illuminate\Cookie\Middleware\EncryptCookies;
 use Illuminate\Foundation\Http\Middleware\PreventRequestForgery;
 use Illuminate\Routing\Middleware\SubstituteBindings;
 use Illuminate\Session\Middleware\StartSession;
+use Illuminate\Support\HtmlString;
 use Illuminate\View\Middleware\ShareErrorsFromSession;
 use Filament\View\PanelsRenderHook;
 
@@ -36,7 +37,12 @@ class AdminPanelProvider extends PanelProvider
             ->login(Login::class)
             ->maxContentWidth(Width::Full)
             ->brandName('دار البراق لثقافة الأطفال')
-            ->brandLogo('https://alburagh.com/alburagh-laravel/logo.png')
+            ->brandLogo(fn () => new HtmlString(
+                '<span style="display:flex;align-items:center;height:100%;gap:.5rem;">'
+                    .'<img src="https://alburagh.com/alburagh-laravel/logo.png" alt="دار البراق لثقافة الأطفال" style="height:100%;width:auto;" />'
+                    .'<span>دار البراق لثقافة الأطفال</span>'
+                .'</span>'
+            ))
             ->brandLogoHeight('2rem')
             ->globalSearch(false)
             ->renderHook(
