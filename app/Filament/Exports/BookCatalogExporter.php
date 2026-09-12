@@ -11,6 +11,7 @@ use Filament\Forms\Components\TextInput;
 use OpenSpout\Common\Entity\Row;
 use OpenSpout\Common\Entity\Style\CellAlignment;
 use OpenSpout\Common\Entity\Style\CellVerticalAlignment;
+use OpenSpout\Common\Entity\Style\Color;
 use OpenSpout\Common\Entity\Style\Style;
 use OpenSpout\Writer\XLSX\Entity\SheetView;
 use OpenSpout\Writer\XLSX\Options;
@@ -19,6 +20,9 @@ use OpenSpout\Writer\XLSX\Writer;
 class BookCatalogExporter extends Exporter
 {
     protected static ?string $model = BookCatalog::class;
+
+    // Matches the admin panel's primary color (Color::Amber, shade 600).
+    protected const BRAND_COLOR = 'D97706';
 
     public static function getOptionsFormComponents(): array
     {
@@ -105,6 +109,8 @@ class BookCatalogExporter extends Exporter
         $brandRowStyle = (new Style())
             ->setFontBold()
             ->setFontSize(14)
+            ->setFontColor(Color::WHITE)
+            ->setBackgroundColor(Color::toARGB(self::BRAND_COLOR))
             ->setCellAlignment(CellAlignment::CENTER);
 
         $writer->addRow(Row::fromValues(
@@ -126,6 +132,8 @@ class BookCatalogExporter extends Exporter
     {
         return (new Style())
             ->setFontBold()
+            ->setFontColor(Color::WHITE)
+            ->setBackgroundColor(Color::toARGB(self::BRAND_COLOR))
             ->setCellAlignment(CellAlignment::RIGHT)
             ->setCellVerticalAlignment(CellVerticalAlignment::CENTER);
     }
