@@ -8,10 +8,12 @@ use Filament\Actions\Exports\Exporter;
 use Filament\Actions\Exports\Models\Export;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
+use OpenSpout\Common\Entity\Row;
 use OpenSpout\Common\Entity\Style\CellAlignment;
 use OpenSpout\Common\Entity\Style\CellVerticalAlignment;
 use OpenSpout\Common\Entity\Style\Style;
 use OpenSpout\Writer\XLSX\Entity\SheetView;
+use OpenSpout\Writer\XLSX\Options;
 use OpenSpout\Writer\XLSX\Writer;
 
 class BookCatalogExporter extends Exporter
@@ -88,6 +90,29 @@ class BookCatalogExporter extends Exporter
             ExportColumn::make('weight')->label($ar ? 'الوزن' : 'Weight'),
             ExportColumn::make('age_group')->label($ar ? 'الفئة العمرية' : 'Age Group'),
         ];
+    }
+
+    public function getXlsxWriterOptions(): ?Options
+    {
+        $options = new Options();
+        $options->mergeCells(0, 1, count(static::getColumns()) - 1, 1);
+
+        return $options;
+    }
+
+    public function configureXlsxWriterAfterOpen(Writer $writer): Writer
+    {
+        $brandRowStyle = (new Style())
+            ->setFontBold()
+            ->setFontSize(14)
+            ->setCellAlignment(CellAlignment::CENTER);
+
+        $writer->addRow(Row::fromValues(
+            ['بيانات إصدارات دار البراق لثقافة الأطفال'],
+            $brandRowStyle,
+        ));
+
+        return $writer;
     }
 
     public function getXlsxCellStyle(): ?Style
