@@ -327,15 +327,25 @@ STABLE COLUMN LAYOUT
     flex-shrink: 0;
     width: 34px;
     height: 34px;
+    padding: 0;
     border: 1px solid rgba(0,0,0,.15);
     border-radius: 8px;
     display: inline-flex;
     align-items: center;
     justify-content: center;
     cursor: pointer;
-    font-size: 16px;
-    line-height: 1;
+    background: none;
     transition: background-color .1s ease;
+}
+
+#book-catalog-sidebar-toggle svg {
+    width: 16px;
+    height: 16px;
+    transition: transform .15s ease;
+}
+
+#book-catalog-sidebar-toggle.is-collapsed svg {
+    transform: rotate(180deg);
 }
 
 html:not(.dark) #book-catalog-sidebar-toggle:hover {
@@ -816,7 +826,11 @@ html.dark .fi-no-notification[class*="warning"] {
     <div id="book-catalog-popover-body"></div>
 </div>
 
-<button type="button" id="book-catalog-sidebar-toggle">❯</button>
+<button type="button" id="book-catalog-sidebar-toggle">
+    <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M12.5 15 7.5 10l5-5" />
+    </svg>
+</button>
 <button type="button" id="book-catalog-scroll-left" class="book-catalog-scroll-arrow">‹</button>
 <button type="button" id="book-catalog-scroll-right" class="book-catalog-scroll-arrow">›</button>
 
@@ -1163,7 +1177,7 @@ html.dark .fi-no-notification[class*="warning"] {
     const syncSidebarButton = () => {
         const collapsed = isCollapsed();
 
-        sidebarButton.textContent = collapsed ? '❮' : '❯';
+        sidebarButton.classList.toggle('is-collapsed', collapsed);
         sidebarButton.title = collapsed
             ? (document.documentElement.lang === 'ar' ? 'إظهار القائمة الجانبية' : 'Show sidebar')
             : (document.documentElement.lang === 'ar' ? 'تكبير العرض (بدون ملء الشاشة)' : 'Widen view (not fullscreen)');
