@@ -656,21 +656,6 @@ body:has(form#form) .fi-page-header-actions .fi-btn {
 .fi-topbar .fi-logo {
     height: 1.5rem !important;
 }
-
-/* پیغام‌های موفقیت/خطا (toast) بزرگ‌تر و خواناتر */
-.fi-no-notification {
-    max-width: 28rem !important;
-    padding: 1.25rem !important;
-}
-
-.fi-no-notification-title {
-    font-size: 1.125rem !important;
-    font-weight: 700 !important;
-}
-
-.fi-no-notification-body {
-    font-size: 1rem !important;
-}
 @endif
 
 </style>
