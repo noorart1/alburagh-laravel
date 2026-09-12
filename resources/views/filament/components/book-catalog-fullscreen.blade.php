@@ -658,6 +658,121 @@ body:has(form#form) .fi-page-header-actions .fi-btn {
 }
 @endif
 
+/* =========================================================
+   CLEAR SUCCESS / ERROR TOASTS
+   اعلان باید حتی برای کاربر ناآشنا فوراً قابل تشخیص باشد.
+   این بخش عمداً بیرون شرط صفحه فهرست است تا در صفحه ویرایش نیز کار کند.
+   ========================================================= */
+.fi-no {
+    position: fixed !important;
+    top: 1.25rem !important;
+    right: 50% !important;
+    left: auto !important;
+    z-index: 999999 !important;
+    width: min(94vw, 34rem) !important;
+    transform: translateX(50%) !important;
+    pointer-events: none !important;
+}
+
+.fi-no-notification {
+    width: 100% !important;
+    max-width: none !important;
+    min-height: 94px !important;
+    padding: 1rem 1.15rem !important;
+    border: 3px solid currentColor !important;
+    border-radius: 14px !important;
+    box-shadow: 0 14px 38px rgba(0, 0, 0, .32) !important;
+    pointer-events: auto !important;
+}
+
+.fi-no-notification-title {
+    font-size: 1.3rem !important;
+    line-height: 1.55 !important;
+    font-weight: 800 !important;
+    letter-spacing: 0 !important;
+}
+
+.fi-no-notification-body {
+    margin-top: .35rem !important;
+    font-size: 1.05rem !important;
+    line-height: 1.75 !important;
+    font-weight: 600 !important;
+}
+
+.fi-no-notification .fi-icon,
+.fi-no-notification > svg {
+    width: 2rem !important;
+    height: 2rem !important;
+    min-width: 2rem !important;
+    stroke-width: 2.5 !important;
+}
+
+.fi-no-notification-close-btn,
+.fi-no-notification .fi-icon-btn {
+    width: 2.25rem !important;
+    height: 2.25rem !important;
+    border-radius: 999px !important;
+}
+
+/* موفقیت: سبز پررنگ و واضح */
+.fi-no-notification.fi-color-success,
+.fi-no-notification[class*="success"] {
+    background: #ecfdf5 !important;
+    color: #065f46 !important;
+    border-color: #16a34a !important;
+}
+
+/* خطا: قرمز پررنگ و هشداردهنده */
+.fi-no-notification.fi-color-danger,
+.fi-no-notification[class*="danger"] {
+    background: #fff1f2 !important;
+    color: #991b1b !important;
+    border-color: #dc2626 !important;
+}
+
+/* هشدار */
+.fi-no-notification.fi-color-warning,
+.fi-no-notification[class*="warning"] {
+    background: #fffbeb !important;
+    color: #92400e !important;
+    border-color: #f59e0b !important;
+}
+
+/* حالت تیره با حفظ کنتراست زیاد */
+html.dark .fi-no-notification.fi-color-success,
+html.dark .fi-no-notification[class*="success"] {
+    background: #052e25 !important;
+    color: #d1fae5 !important;
+}
+
+html.dark .fi-no-notification.fi-color-danger,
+html.dark .fi-no-notification[class*="danger"] {
+    background: #450a0a !important;
+    color: #fee2e2 !important;
+}
+
+html.dark .fi-no-notification.fi-color-warning,
+html.dark .fi-no-notification[class*="warning"] {
+    background: #451a03 !important;
+    color: #fef3c7 !important;
+}
+
+@media (max-width: 640px) {
+    .fi-no {
+        top: .75rem !important;
+        width: calc(100vw - 1rem) !important;
+    }
+
+    .fi-no-notification {
+        min-height: 86px !important;
+        padding: .85rem 1rem !important;
+    }
+
+    .fi-no-notification-title {
+        font-size: 1.15rem !important;
+    }
+}
+
 </style>
 
 <div id="bc-pin-wrap">
