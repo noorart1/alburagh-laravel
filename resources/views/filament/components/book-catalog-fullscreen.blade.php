@@ -921,6 +921,19 @@ html.dark .fi-no-notification[class*="warning"] {
 
         const clone = thead.cloneNode(true);
 
+        // این clone فقط برای نمایش ثابت (Sticky Header) است، نه تعامل واقعی.
+        // Alpine سعی می‌کند Attributeهای x-bind/x-on/wire: را روی این DOM
+        // جدا از scope اصلی Livewire هم دوباره ارزیابی کند (مثلاً چک‌باکس
+        // «انتخاب همه» که getRecordsOnPage را صدا می‌زند) و چون این scope
+        // را ندارد خطا می‌دهد؛ پس این Attributeها را از کلون حذف می‌کنیم.
+        [clone, ...clone.querySelectorAll('*')].forEach((el) => {
+            [...el.attributes].forEach((attr) => {
+                if (/^(x-|wire:|@)/.test(attr.name)) {
+                    el.removeAttribute(attr.name);
+                }
+            });
+        });
+
         // عرض واقعی هر TH را از جدول اصلی می‌گیریم.
         // این روش به تعداد/وجود Checkbox و Action وابسته نیست.
         const originalHeaders = [...thead.querySelectorAll('th')];
