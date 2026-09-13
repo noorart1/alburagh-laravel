@@ -321,13 +321,11 @@ STABLE COLUMN LAYOUT
     white-space: nowrap !important;
 }
 
-/* Sidebar toggle — fixed near the topbar/avatar, like claude.ai's
-   panel toggle sitting next to its logo. */
+/* Sidebar toggle — دیگر fixed نیست؛ با JS داخل جعبهٔ #bc-pinned-heading
+(همان ردیف عنوان «الكتب» کنار جستجو) جا می‌گیرد، سمت راستِ متن عنوان،
+تا با هر عرض/زوم صفحه هم‌ردیف واقعی بماند نه یک overlay مختصات‌محور. */
 #book-catalog-sidebar-toggle {
-    position: fixed;
-    top: 12px;
-    right: 64px;
-    z-index: 100050;
+    flex-shrink: 0;
     width: 34px;
     height: 34px;
     padding: 0;
@@ -646,6 +644,9 @@ body:has(form#form) .fi-page-header-actions .fi-btn {
 
 #bc-pinned-heading {
     order: -1;
+    display: flex;
+    align-items: center;
+    gap: 8px;
     font-size: 1.1rem;
     font-weight: 700;
     white-space: nowrap;
@@ -1045,8 +1046,25 @@ html.dark .fi-no-notification[class*="warning"] {
             toolbar.insertBefore(pinned, toolbar.firstChild);
         }
 
-        if (pinned.textContent !== heading.textContent) {
-            pinned.textContent = heading.textContent;
+        let text = pinned.querySelector('#bc-pinned-heading-text');
+
+        if (!text) {
+            text = document.createElement('span');
+            text.id = 'bc-pinned-heading-text';
+            pinned.appendChild(text);
+        }
+
+        if (text.textContent !== heading.textContent) {
+            text.textContent = heading.textContent;
+        }
+
+        // دکمهٔ toggle سایدبار همیشه اول جعبهٔ عنوان می‌ماند (سمت راستِ متن،
+        // چون این فرزند اول pinned-heading است، نه یک فرزند مستقل toolbar —
+        // این‌طوری قانون nth-child(2) خود Filament روی toolbar دست‌نخورده می‌ماند).
+        // Move می‌شود نه Clone، چون دکمه event listener واقعی دارد؛ اگر Livewire
+        // این جعبه را بازسازی کند، دفعهٔ بعد همین mutation observer دوباره برش می‌گرداند.
+        if (pinned.firstElementChild !== sidebarButton) {
+            pinned.insertBefore(sidebarButton, pinned.firstChild);
         }
     }
 
