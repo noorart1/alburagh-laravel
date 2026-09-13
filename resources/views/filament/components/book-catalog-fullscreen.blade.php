@@ -651,6 +651,24 @@ body:has(form#form) .fi-page-header-actions .fi-btn {
     white-space: nowrap;
 }
 
+/* روی موبایل toolbar جدول flex-wrap دارد، پس اگر ردیف عنوان+جستجو+فیلتر
+جا نشود، گروه جستجو/فیلتر کامل به ردیف بعدی می‌افتد و عنوان تنها می‌ماند.
+با nowrap و اجازه‌ی جمع‌شدن به input جستجو، هر سه در یک ردیف می‌مانند. */
+@media (max-width: 640px) {
+    .fi-ta-header-toolbar {
+        flex-wrap: nowrap !important;
+    }
+
+    .fi-ta-header-toolbar > * {
+        min-width: 0 !important;
+    }
+
+    .fi-ta-search-field {
+        flex: 1 1 auto !important;
+        min-width: 0 !important;
+    }
+}
+
 /* کارت جدول بدون فاصله بالایی */
 .fi-ta-ctn,
 .fi-ta-main,
