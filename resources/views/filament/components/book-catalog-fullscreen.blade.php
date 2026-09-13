@@ -350,21 +350,34 @@ html:not(.dark) #book-catalog-sidebar-toggle:hover {
     background-color: #e9eaec !important;
 }
 
-body.book-catalog-sidebar-collapsed .fi-sidebar {
-    display: none !important;
+/* این کلاس فقط برای Sidebar ثابت دسکتاپ (Filament) است؛
+زیر 1024px، Filament خودش یک منوی کشویی با دکمه همبرگر مخصوص خودش دارد
+و اگر این قانون آنجا هم اعمال شود، آن منو را با display:none قفل می‌کند. */
+@media (min-width: 1024px) {
+    body.book-catalog-sidebar-collapsed .fi-sidebar {
+        display: none !important;
+    }
+
+    /* فقط وقتی Sidebar را خودمان Collapse کرده‌ایم،
+    Main تمام عرض مرورگر را می‌گیرد. */
+    body.book-catalog-sidebar-collapsed .fi-main-ctn {
+        margin-inline-start: 0 !important;
+        width: 100% !important;
+        max-width: none !important;
+    }
+
+    body.book-catalog-sidebar-collapsed .fi-main {
+        width: 100% !important;
+        max-width: none !important;
+    }
 }
 
-/* فقط وقتی Sidebar را خودمان Collapse کرده‌ایم،
-Main تمام عرض مرورگر را می‌گیرد. */
-body.book-catalog-sidebar-collapsed .fi-main-ctn {
-    margin-inline-start: 0 !important;
-    width: 100% !important;
-    max-width: none !important;
-}
-
-body.book-catalog-sidebar-collapsed .fi-main {
-    width: 100% !important;
-    max-width: none !important;
+/* زیر 1024px همان دکمه همبرگر پیش‌فرض Filament برای باز/بسته کردن
+منوی کشویی وجود دارد؛ دکمه سفارشی ما همان‌جا شناور و اضافی می‌ماند. */
+@media (max-width: 1023.98px) {
+    #book-catalog-sidebar-toggle {
+        display: none !important;
+    }
 }
 
 /* Side arrows */
