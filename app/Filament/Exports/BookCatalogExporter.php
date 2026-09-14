@@ -63,6 +63,7 @@ class BookCatalogExporter extends Exporter
 
         return [
             ExportColumn::make('catalog_number')->label('#'),
+            ExportColumn::make('temporary_catalog_number')->label($ar ? 'رقم مؤقت للعرض' : 'Temporary Display #'),
             ExportColumn::make('barcode')->label($ar ? 'باركد الكتاب' : 'Barcode'),
             ExportColumn::make('series_name')->label($ar ? 'اسم السلسلة' : 'Series Name'),
             ExportColumn::make('title')->label($ar ? 'اسم الكتاب' : 'Book Title'),
@@ -98,6 +99,7 @@ class BookCatalogExporter extends Exporter
             ExportColumn::make('size')->label($ar ? 'القياس' : 'Size'),
             ExportColumn::make('weight')->label($ar ? 'الوزن' : 'Weight'),
             ExportColumn::make('age_group')->label($ar ? 'الفئة العمرية' : 'Age Group'),
+            ExportColumn::make('notes')->label($ar ? 'ملاحظات' : 'Notes'),
         ];
     }
 
