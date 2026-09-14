@@ -41,6 +41,9 @@ class CodeSeriesTable
                     ->label('Drupal NID')
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
+            ->persistFiltersInSession()
+            ->persistSearchInSession()
+            ->persistColumnSearchesInSession()
             ->recordActions([
                 EditAction::make()
                     ->label('ویرایش'),

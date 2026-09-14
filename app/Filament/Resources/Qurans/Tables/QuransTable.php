@@ -40,6 +40,10 @@ class QuransTable
                     ->boolean(),
             ])
 
+            ->persistFiltersInSession()
+            ->persistSearchInSession()
+            ->persistColumnSearchesInSession()
+
             ->recordActions([
                 EditAction::make(),
             ])

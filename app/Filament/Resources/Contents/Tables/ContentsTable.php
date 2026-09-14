@@ -57,6 +57,9 @@ class ContentsTable
             ->filters([
                 //
             ])
+            ->persistFiltersInSession()
+            ->persistSearchInSession()
+            ->persistColumnSearchesInSession()
             ->recordActions([
                 EditAction::make(),
             ])

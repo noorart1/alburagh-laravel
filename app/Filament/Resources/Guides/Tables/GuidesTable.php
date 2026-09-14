@@ -37,6 +37,9 @@ class GuidesTable
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
             ->defaultSort('sort_order')
+            ->persistFiltersInSession()
+            ->persistSearchInSession()
+            ->persistColumnSearchesInSession()
             ->recordActions([
                 EditAction::make()
                     ->label('ویرایش'),

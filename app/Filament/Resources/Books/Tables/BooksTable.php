@@ -57,6 +57,10 @@ class BooksTable
                 //
             ])
 
+            ->persistFiltersInSession()
+            ->persistSearchInSession()
+            ->persistColumnSearchesInSession()
+
             ->recordActions([
                 EditAction::make(),
             ])

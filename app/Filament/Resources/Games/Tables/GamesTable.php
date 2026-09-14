@@ -46,6 +46,10 @@ class GamesTable
 
             ->defaultSort('sort_order')
 
+            ->persistFiltersInSession()
+            ->persistSearchInSession()
+            ->persistColumnSearchesInSession()
+
             ->recordActions([
                 EditAction::make(),
             ])

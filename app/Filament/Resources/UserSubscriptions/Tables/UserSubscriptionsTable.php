@@ -51,6 +51,10 @@ class UserSubscriptionsTable
 
             ->defaultSort('subscription_date', 'desc')
 
+            ->persistFiltersInSession()
+            ->persistSearchInSession()
+            ->persistColumnSearchesInSession()
+
             ->recordActions([
                 EditAction::make(),
             ])
