@@ -9,11 +9,11 @@ class Login extends BaseLogin
 {
     public function getHeading(): string|Htmlable
     {
-        return 'بيانات إصدارات دار البراق لثقافة الأطفال';
+        return 'تسجيل الدخول إلى لوحة الإدارة';
     }
 
     public function getSubheading(): string|Htmlable|null
     {
-        return null;
+        return 'دار البراق لثقافة الأطفال';
     }
 }
