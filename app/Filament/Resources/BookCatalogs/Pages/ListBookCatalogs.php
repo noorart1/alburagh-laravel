@@ -14,6 +14,29 @@ class ListBookCatalogs extends ListRecords
 {
     protected static string $resource = BookCatalogResource::class;
 
+    /**
+     * Column visibility survives logout/browser restart by storing it on
+     * the user record instead of the session (which is wiped on logout).
+     *
+     * @return array<int, array<string, mixed>>
+     */
+    protected function loadTableColumnsFromSession(): array
+    {
+        return auth()->user()->book_catalogs_table_columns
+            ?? $this->getDefaultTableColumnState();
+    }
+
+    protected function persistTableColumns(): void
+    {
+        if (! $this->getTable()->persistsColumnsInSession()) {
+            return;
+        }
+
+        auth()->user()->update([
+            'book_catalogs_table_columns' => $this->tableColumns,
+        ]);
+    }
+
     protected function getHeaderActions(): array
     {
         return [

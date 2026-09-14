@@ -27,6 +27,7 @@ use Illuminate\Support\Facades\Hash;
     'drupal_created_at',
     'drupal_last_access_at',
     'drupal_last_login_at',
+    'book_catalogs_table_columns',
 ])]
 #[Hidden([
     'password',
@@ -94,6 +95,7 @@ class User extends Authenticatable implements FilamentUser
             'drupal_created_at' => 'datetime',
             'drupal_last_access_at' => 'datetime',
             'drupal_last_login_at' => 'datetime',
+            'book_catalogs_table_columns' => 'array',
         ];
     }
 }
