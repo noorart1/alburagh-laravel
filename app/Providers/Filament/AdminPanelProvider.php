@@ -38,10 +38,7 @@ class AdminPanelProvider extends PanelProvider
             ->maxContentWidth(Width::Full)
             ->brandName('دار البراق لثقافة الأطفال')
             ->brandLogo(fn () => new HtmlString(
-                '<span style="display:flex;align-items:center;height:100%;gap:.5rem;">'
-                    .'<img src="https://alburagh.com/alburagh-laravel/logo.png" alt="دار البراق لثقافة الأطفال" style="height:100%;width:auto;" />'
-                    .'<span>بيانات إصدارات دار البراق لثقافة الأطفال</span>'
-                .'</span>'
+                '<img src="https://alburagh.com/alburagh-laravel/logo.png" alt="دار البراق لثقافة الأطفال" style="height:100%;width:auto;" />'
             ))
             ->brandLogoHeight('2rem')
             ->globalSearch(false)
