@@ -28,7 +28,7 @@ class BookCatalogInfolist
                     ->schema([
 
                         TextEntry::make('catalog_number')
-                            ->label('#')
+                            ->label('الرقم')
                             ->copyable()
                             ->placeholder('—'),
 

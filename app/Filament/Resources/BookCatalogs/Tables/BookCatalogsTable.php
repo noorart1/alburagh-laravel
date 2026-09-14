@@ -25,7 +25,7 @@ class BookCatalogsTable
             ->columns([
                 TextColumn::make('catalog_number')
                     ->width('74px')
-                    ->label('#')
+                    ->label('الرقم')
                     ->formatStateUsing(
                         fn ($state, BookCatalog $record): string =>
                             filled($record->temporary_catalog_number)
