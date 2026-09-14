@@ -7,10 +7,10 @@ use Illuminate\Contracts\Support\Htmlable;
 
 class Login extends BaseLogin
 {
-   /* public function getHeading(): string|Htmlable
+    public function getHeading(): string|Htmlable
     {
         return 'تسجيل الدخول إلى لوحة الإدارة';
-    }*/
+    }
 
     public function getSubheading(): string|Htmlable|null
     {
