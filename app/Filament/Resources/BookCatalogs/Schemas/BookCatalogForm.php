@@ -25,7 +25,7 @@ class BookCatalogForm
                                 Section::make(app()->getLocale() === 'ar' ? 'المعلومات الأساسية' : 'Basic Information')
                                     ->schema([
                                         TextInput::make('catalog_number')
-                                            ->label('#')
+                                            ->label('الرقم')
                                             ->numeric()
                                             ->required()
                                             ->minValue(1000)
