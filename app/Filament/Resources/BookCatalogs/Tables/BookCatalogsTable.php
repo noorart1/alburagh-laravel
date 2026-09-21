@@ -13,6 +13,7 @@ use Filament\Actions\EditAction;
 use Filament\Actions\ViewAction;
 use Filament\Tables\Columns\ImageColumn;
 use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 
@@ -174,17 +175,14 @@ class BookCatalogsTable
                     ->searchable()
                     ->toggleable(),
 
-                // One ✓ column per Category/Publisher option (hidden by default; enable via the column manager).
-                ...collect(['category' => BookCatalog::categoryOptions(), 'publisher' => BookCatalog::publisherOptions()])
-                    ->flatMap(fn (array $options, string $field) => collect($options)->map(
-                        fn (string $label, string $key) => TextColumn::make("{$field}_{$key}")
-                            ->label($label)
-                            ->state(fn (BookCatalog $record): string => $record->{$field} === $key ? '✓' : '')
-                            ->alignCenter()
-                            ->toggleable(isToggledHiddenByDefault: true)
-                    ))
-                    ->values()
-                    ->all(),
+            ])
+            ->filters([
+                SelectFilter::make('category')
+                    ->label(app()->getLocale() === 'ar' ? 'الصنف' : 'Category')
+                    ->options(BookCatalog::categoryOptions()),
+                SelectFilter::make('publisher')
+                    ->label(app()->getLocale() === 'ar' ? 'الناشر' : 'Publisher')
+                    ->options(BookCatalog::publisherOptions()),
             ])
             ->recordUrl(fn (BookCatalog $record): string => BookCatalogResource::getUrl('edit', ['record' => $record]))
             ->recordActions([

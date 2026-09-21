@@ -90,16 +90,6 @@ class BookCatalogExporter extends Exporter
             ExportColumn::make('weight')->label($ar ? 'الوزن' : 'Weight'),
             ExportColumn::make('age_group')->label($ar ? 'الفئة العمرية' : 'Age Group'),
             ExportColumn::make('notes')->label($ar ? 'ملاحظات' : 'Notes'),
-            // One ✓ column per Category/Publisher option, same names as the table columns.
-            ...collect(['category' => BookCatalog::categoryOptions(), 'publisher' => BookCatalog::publisherOptions()])
-                ->flatMap(fn (array $options, string $field) => collect($options)->map(
-                    fn (string $label, string $key) => ExportColumn::make("{$field}_{$key}")
-                        ->label($label)
-                        ->state(fn (BookCatalog $record): string => $record->{$field} === $key ? '✓' : '')
-                        ->enabledByDefault(false)
-                ))
-                ->values()
-                ->all(),
         ];
     }
 
