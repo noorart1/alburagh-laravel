@@ -41,6 +41,7 @@ class BookCatalogsTable
                     ->disk('public')
                     ->square()
                     ->height(52)
+                    ->extraImgAttributes(['loading' => 'lazy'])
                     ->toggleable(),
 
                 TextColumn::make('barcode')
@@ -231,6 +232,7 @@ class BookCatalogsTable
                     ")
                     ->orderBy('catalog_number', 'asc');
             })
+            ->deferLoading()
             ->persistFiltersInSession()
             ->persistSearchInSession()
             ->persistColumnSearchesInSession();
