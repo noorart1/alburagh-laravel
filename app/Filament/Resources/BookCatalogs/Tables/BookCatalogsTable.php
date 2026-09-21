@@ -13,7 +13,6 @@ use Filament\Actions\EditAction;
 use Filament\Actions\ViewAction;
 use Filament\Tables\Columns\ImageColumn;
 use Filament\Tables\Columns\TextColumn;
-use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 
@@ -174,14 +173,6 @@ class BookCatalogsTable
                     ->label(app()->getLocale() === 'ar' ? 'الفئة العمرية' : 'Age Group')
                     ->searchable()
                     ->toggleable(),
-            ])
-            ->filters([
-                SelectFilter::make('category')
-                    ->label(app()->getLocale() === 'ar' ? 'الصنف' : 'Category')
-                    ->options(BookCatalog::categoryOptions()),
-                SelectFilter::make('publisher')
-                    ->label(app()->getLocale() === 'ar' ? 'الناشر' : 'Publisher')
-                    ->options(BookCatalog::publisherOptions()),
             ])
             ->recordUrl(fn (BookCatalog $record): string => BookCatalogResource::getUrl('edit', ['record' => $record]))
             ->recordActions([
