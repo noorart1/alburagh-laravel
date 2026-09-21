@@ -173,6 +173,18 @@ class BookCatalogsTable
                     ->label(app()->getLocale() === 'ar' ? 'الفئة العمرية' : 'Age Group')
                     ->searchable()
                     ->toggleable(),
+
+                // One ✓ column per Category/Publisher option (hidden by default; enable via the column manager).
+                ...collect(['category' => BookCatalog::categoryOptions(), 'publisher' => BookCatalog::publisherOptions()])
+                    ->flatMap(fn (array $options, string $field) => collect($options)->map(
+                        fn (string $label, string $key) => TextColumn::make("{$field}_{$key}")
+                            ->label($label)
+                            ->state(fn (BookCatalog $record): string => $record->{$field} === $key ? '✓' : '')
+                            ->alignCenter()
+                            ->toggleable(isToggledHiddenByDefault: true)
+                    ))
+                    ->values()
+                    ->all(),
             ])
             ->recordUrl(fn (BookCatalog $record): string => BookCatalogResource::getUrl('edit', ['record' => $record]))
             ->recordActions([
