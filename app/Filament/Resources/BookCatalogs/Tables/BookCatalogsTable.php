@@ -13,6 +13,7 @@ use Filament\Actions\EditAction;
 use Filament\Actions\ViewAction;
 use Filament\Tables\Columns\ImageColumn;
 use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 
@@ -68,12 +69,7 @@ class BookCatalogsTable
                     ->width('90px')
                     ->limit(17)
                     ->label(app()->getLocale() === 'ar' ? 'الصنف' : 'Category')
-                    ->formatStateUsing(fn (?string $state): ?string => match ($state) {
-                        'book' => app()->getLocale() === 'ar' ? 'كتاب' : 'Book',
-                        'game' => app()->getLocale() === 'ar' ? 'لعبة' : 'Game',
-                        'islamic' => app()->getLocale() === 'ar' ? 'إسلامي' : 'Islamic',
-                        default => $state,
-                    })
+                    ->formatStateUsing(fn (?string $state): ?string => BookCatalog::categoryOptions()[$state] ?? $state)
                     ->searchable()
                     ->toggleable(),
 
@@ -81,16 +77,7 @@ class BookCatalogsTable
                     ->width('60px')
                     ->limit(17)
                     ->label(app()->getLocale() === 'ar' ? 'الناشر' : 'Publisher')
-                    ->formatStateUsing(fn (?string $state): ?string => match ($state) {
-                        'dar_alburagh' => app()->getLocale() === 'ar'
-                            ? 'دار البراق لثقافة الأطفال'
-                            : 'Dar Al-Buraq for Children’s Culture',
-                        'dar_maheroon' => app()->getLocale() === 'ar'
-                            ? 'دار ماهرون للنشر والتوزيع'
-                            : 'Dar Maheroon for Publishing and Distribution',
-                        'supplies' => app()->getLocale() === 'ar' ? 'توريدات' : 'Supplies',
-                        default => $state,
-                    })
+                    ->formatStateUsing(fn (?string $state): ?string => BookCatalog::publisherOptions()[$state] ?? $state)
                     ->searchable()
                     ->toggleable(),
                 TextColumn::make('author')
@@ -187,6 +174,14 @@ class BookCatalogsTable
                     ->label(app()->getLocale() === 'ar' ? 'الفئة العمرية' : 'Age Group')
                     ->searchable()
                     ->toggleable(),
+            ])
+            ->filters([
+                SelectFilter::make('category')
+                    ->label(app()->getLocale() === 'ar' ? 'الصنف' : 'Category')
+                    ->options(BookCatalog::categoryOptions()),
+                SelectFilter::make('publisher')
+                    ->label(app()->getLocale() === 'ar' ? 'الناشر' : 'Publisher')
+                    ->options(BookCatalog::publisherOptions()),
             ])
             ->recordUrl(fn (BookCatalog $record): string => BookCatalogResource::getUrl('edit', ['record' => $record]))
             ->recordActions([

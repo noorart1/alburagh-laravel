@@ -60,28 +60,14 @@ class BookCatalogForm
 
                                         Select::make('category')
                                             ->label(app()->getLocale() === 'ar' ? 'الصنف' : 'Category')
-                                            ->options([
-                                                'book' => app()->getLocale() === 'ar' ? 'كتاب' : 'Book',
-                                                'game' => app()->getLocale() === 'ar' ? 'لعبة' : 'Game',
-                                                'islamic' => app()->getLocale() === 'ar' ? 'إسلامي' : 'Islamic',
-                                            ])
+                                            ->options(BookCatalog::categoryOptions())
                                             ->native(false)
                                             ->searchable()
                                             ->required(),
 
                                         Select::make('publisher')
                                             ->label(app()->getLocale() === 'ar' ? 'الناشر' : 'Publisher')
-                                            ->options([
-                                                'dar_alburagh' => app()->getLocale() === 'ar'
-                                                    ? 'دار البراق لثقافة الأطفال'
-                                                    : 'Dar Al-Buraq for Children’s Culture',
-                                                'dar_maheroon' => app()->getLocale() === 'ar'
-                                                    ? 'دار ماهرون للنشر والتوزيع'
-                                                    : 'Dar Maheroon for Publishing and Distribution',
-                                                'supplies' => app()->getLocale() === 'ar'
-                                                    ? 'توريدات'
-                                                    : 'Supplies',
-                                            ])
+                                            ->options(BookCatalog::publisherOptions())
                                             ->native(false)
                                             ->searchable(),
 
