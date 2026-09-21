@@ -1006,8 +1006,15 @@ html.dark .fi-no-notification[class*="warning"] {
         headTable.style.width = `${totalWidth}px`;
         headTable.style.minWidth = `${totalWidth}px`;
         headTable.style.maxWidth = `${totalWidth}px`;
-        topScrollInner.style.width = `${Math.max(table.scrollWidth, totalWidth)}px`;
-        bottomScrollInner.style.width = `${Math.max(table.scrollWidth, totalWidth)}px`;
+        // Mirror bars must have the same scroll range as the real host, or they
+        // stop short of the end: scrollWidth + the width the bar has beyond the
+        // host's clientWidth (borders / vertical scrollbar).
+        const mirrorWidth = Math.max(
+            scrollHost.scrollWidth + Math.max(0, hostRect.width - scrollHost.clientWidth),
+            totalWidth
+        );
+        topScrollInner.style.width = `${mirrorWidth}px`;
+        bottomScrollInner.style.width = `${mirrorWidth}px`;
 
         const clonedHeaders = [...clone.querySelectorAll('th')];
 
@@ -1157,8 +1164,11 @@ html.dark .fi-no-notification[class*="warning"] {
         const mainCtn = document.querySelector('.fi-main-ctn');
         const sidebar = document.querySelector('.fi-sidebar');
         const tableViewport = document.querySelector('.fi-ta-content-ctn');
+        // The table itself: its width changes when columns are toggled or data loads,
+        // without the surrounding containers resizing.
+        const tableEl = document.querySelector('table.fi-ta-table');
 
-        [mainCtn, sidebar, tableViewport].forEach((el) => {
+        [mainCtn, sidebar, tableViewport, tableEl].forEach((el) => {
             if (el && el.dataset.bcResizeObserved !== '1') {
                 el.dataset.bcResizeObserved = '1';
                 layoutResizeObserver.observe(el);
