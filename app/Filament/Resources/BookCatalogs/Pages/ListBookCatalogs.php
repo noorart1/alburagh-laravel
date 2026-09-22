@@ -4,11 +4,17 @@ namespace App\Filament\Resources\BookCatalogs\Pages;
 
 use App\Filament\Exports\BookCatalogExporter;
 use App\Filament\Resources\BookCatalogs\BookCatalogResource;
+use App\Models\BookCatalog;
+use Filament\Actions\Action;
 use Filament\Actions\CreateAction;
 use Filament\Actions\ExportAction;
 use Filament\Actions\Exports\Enums\ExportFormat;
+use Filament\Forms\Components\FileUpload;
+use Filament\Notifications\Notification;
 use Filament\Resources\Pages\ListRecords;
 use Illuminate\Database\Eloquent\Builder;
+use Livewire\Features\SupportFileUploads\TemporaryUploadedFile;
+use OpenSpout\Reader\XLSX\Reader as XlsxReader;
 
 class ListBookCatalogs extends ListRecords
 {
@@ -72,6 +78,159 @@ class ListBookCatalogs extends ListRecords
                     return $query;
                 })
                 ->maxRows(10000),
+
+            Action::make('importExcel')
+                ->label(app()->getLocale() === 'ar' ? 'استيراد التغييرات' : 'Import changes')
+                ->icon('heroicon-o-arrow-up-tray')
+                ->color('gray')
+                ->schema([
+                    FileUpload::make('file')
+                        ->label(app()->getLocale() === 'ar' ? 'ملف Excel المعدّل' : 'Edited Excel file')
+                        ->helperText(app()->getLocale() === 'ar'
+                            ? 'ملف مصدَّر من هذه الصفحة، بعد إجراء التعديلات عليه. المطابقة تتم عبر عمود "الرقم".'
+                            : 'A file exported from this page, after you\'ve edited it. Rows are matched by the catalog number column.')
+                        ->acceptedFileTypes(['application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'])
+                        ->rules(['mimes:xlsx'])
+                        ->storeFiles(false)
+                        ->required(),
+                ])
+                ->action(function (array $data): void {
+                    $file = $data['file'];
+
+                    $result = $file instanceof TemporaryUploadedFile
+                        ? static::syncBookCatalogsFromExcel($file->getRealPath())
+                        : ['updated' => 0, 'notFound' => 0, 'noCatalogNumber' => true];
+
+                    $ar = app()->getLocale() === 'ar';
+
+                    if ($result['noCatalogNumber']) {
+                        Notification::make()
+                            ->title($ar ? 'تعذر الاستيراد' : 'Import failed')
+                            ->body($ar
+                                ? 'لم يتم العثور على عمود "الرقم" في الملف، وهو مطلوب لمطابقة السجلات.'
+                                : 'No catalog number column was found in the file, which is required to match records.')
+                            ->danger()
+                            ->send();
+
+                        return;
+                    }
+
+                    Notification::make()
+                        ->title($ar ? 'تم الاستيراد' : 'Import complete')
+                        ->body($ar
+                            ? "تم تحديث {$result['updated']} سجل. لم يتم العثور على {$result['notFound']} رقم كتالوج."
+                            : "{$result['updated']} records updated. {$result['notFound']} catalog numbers were not found.")
+                        ->success()
+                        ->send();
+                }),
+        ];
+    }
+
+    /**
+     * Reads back a file previously produced by BookCatalogExporter (brand
+     * row, then a header row, then data) and updates matching records by
+     * catalog number. Column set/order follows whatever the export's header
+     * row says, so it still works after column mapping or reordering.
+     *
+     * ponytail: single-threaded row-by-row save, fine at this table's size
+     * (thousands, not millions); batch-upsert if that ever changes.
+     *
+     * @return array{updated: int, notFound: int, noCatalogNumber: bool}
+     */
+    protected static function syncBookCatalogsFromExcel(string $path): array
+    {
+        $fieldsByLabel = collect(BookCatalogExporter::getColumns())
+            ->mapWithKeys(fn ($column) => [$column->getLabel() => $column->getName()]);
+
+        $categoryKeysByLabel = array_flip(BookCatalog::categoryOptions());
+        $publisherKeysByLabel = array_flip(BookCatalog::publisherOptions());
+
+        $reader = new XlsxReader();
+        $reader->open($path);
+
+        $headerMap = [];
+        $catalogNumberColumn = null;
+        $updated = 0;
+        $notFound = 0;
+        $rowNumber = 0;
+
+        foreach ($reader->getSheetIterator() as $sheet) {
+            foreach ($sheet->getRowIterator() as $row) {
+                $rowNumber++;
+
+                if ($rowNumber === 1) {
+                    continue; // brand title row
+                }
+
+                $cells = $row->toArray();
+
+                if ($rowNumber === 2) {
+                    foreach ($cells as $index => $label) {
+                        if ($field = $fieldsByLabel->get(trim((string) $label))) {
+                            $headerMap[$index] = $field;
+
+                            if ($field === 'catalog_number') {
+                                $catalogNumberColumn = $index;
+                            }
+                        }
+                    }
+
+                    continue;
+                }
+
+                if ($catalogNumberColumn === null) {
+                    break 2;
+                }
+
+                $catalogNumber = trim((string) ($cells[$catalogNumberColumn] ?? ''));
+
+                if ($catalogNumber === '') {
+                    continue;
+                }
+
+                $record = BookCatalog::where('catalog_number', (int) $catalogNumber)->first();
+
+                if (! $record) {
+                    $notFound++;
+
+                    continue;
+                }
+
+                $values = [];
+
+                foreach ($headerMap as $index => $field) {
+                    if ($field === 'catalog_number') {
+                        continue; // matching key, not editable via import
+                    }
+
+                    $value = $cells[$index] ?? null;
+                    $value = is_string($value) ? trim($value) : $value;
+                    $value = $value === '' ? null : $value;
+
+                    if ($field === 'category' && $value !== null) {
+                        $value = $categoryKeysByLabel[$value] ?? $value;
+                    }
+
+                    if ($field === 'publisher' && $value !== null) {
+                        $value = $publisherKeysByLabel[$value] ?? $value;
+                    }
+
+                    $values[$field] = $value;
+                }
+
+                $record->fill($values)->save();
+                $updated++;
+            }
+
+            break; // only the first sheet
+        }
+
+        $reader->close();
+
+        return [
+            'updated' => $updated,
+            'notFound' => $notFound,
+            'noCatalogNumber' => $catalogNumberColumn === null,
         ];
     }
 }
