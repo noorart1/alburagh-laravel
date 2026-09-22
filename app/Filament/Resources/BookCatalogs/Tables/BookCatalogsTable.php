@@ -15,12 +15,34 @@ use Filament\Tables\Columns\ImageColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Collection;
 
 class BookCatalogsTable
 {
+    /**
+     * One entry per Category/Publisher option, shared between the ✓ columns
+     * below and the query filter in modifyQueryUsing() so both stay in sync.
+     *
+     * @return Collection<int, array{name: string, field: string, value: string, label: string}>
+     */
+    protected static function optionColumns(): Collection
+    {
+        return collect(['category' => BookCatalog::categoryOptions(), 'publisher' => BookCatalog::publisherOptions()])
+            ->flatMap(fn (array $options, string $field) => collect($options)->map(
+                fn (string $label, string $key) => [
+                    'name' => "{$field}_{$key}",
+                    'field' => $field,
+                    'value' => $key,
+                    'label' => $label,
+                ]
+            ))
+            ->values();
+    }
 
     public static function configure(Table $table): Table
     {
+        $optionColumns = static::optionColumns();
+
         return $table
             ->columns([
                 TextColumn::make('catalog_number')
@@ -174,17 +196,16 @@ class BookCatalogsTable
                     ->searchable()
                     ->toggleable(),
 
-                // One ✓ column per Category/Publisher option (hidden by default; enable via the column manager).
-                ...collect(['category' => BookCatalog::categoryOptions(), 'publisher' => BookCatalog::publisherOptions()])
-                    ->flatMap(fn (array $options, string $field) => collect($options)->map(
-                        fn (string $label, string $key) => TextColumn::make("{$field}_{$key}")
-                            ->label($label)
-                            ->state(fn (BookCatalog $record): string => $record->{$field} === $key ? '✓' : '')
-                            ->alignCenter()
-                            ->toggleable(isToggledHiddenByDefault: true)
-                    ))
-                    ->values()
-                    ->all(),
+                // One ✓ column per Category/Publisher option (hidden by default; ticking it
+                // in the column manager both shows it and filters to matching records, see
+                // the modifyQueryUsing() below).
+                ...$optionColumns->map(
+                    fn (array $option) => TextColumn::make($option['name'])
+                        ->label($option['label'])
+                        ->state(fn (BookCatalog $record): string => $record->{$option['field']} === $option['value'] ? '✓' : '')
+                        ->alignCenter()
+                        ->toggleable(isToggledHiddenByDefault: true)
+                )->all(),
             ])
             ->recordUrl(fn (BookCatalog $record): string => BookCatalogResource::getUrl('edit', ['record' => $record]))
             ->recordActions([
@@ -229,6 +250,28 @@ class BookCatalogsTable
                         END ASC
                     ")
                     ->orderBy('catalog_number', 'asc');
+            })
+            ->modifyQueryUsing(function (Builder $query, $livewire) use ($optionColumns): Builder {
+                // Column manager doubles as the filter UI: whichever ✓ columns
+                // are toggled on narrow the results to matching records (OR
+                // across every ticked option, whether category or publisher).
+                $toggled = collect($livewire->tableColumns ?? [])
+                    ->where('type', 'column')
+                    ->pluck('isToggled', 'name');
+
+                $activeOptions = $optionColumns->filter(
+                    fn (array $option) => (bool) ($toggled[$option['name']] ?? false)
+                );
+
+                if ($activeOptions->isEmpty()) {
+                    return $query;
+                }
+
+                return $query->where(function (Builder $query) use ($activeOptions): void {
+                    foreach ($activeOptions->groupBy('field') as $field => $options) {
+                        $query->orWhereIn($field, $options->pluck('value'));
+                    }
+                });
             })
             ->deferLoading()
             ->persistFiltersInSession()
