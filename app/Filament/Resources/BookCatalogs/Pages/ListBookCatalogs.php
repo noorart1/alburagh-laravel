@@ -99,7 +99,7 @@ class ListBookCatalogs extends ListRecords
 
                     $result = $file instanceof TemporaryUploadedFile
                         ? static::syncBookCatalogsFromExcel($file->getRealPath())
-                        : ['updated' => 0, 'notFound' => 0, 'noCatalogNumber' => true];
+                        : ['updated' => 0, 'notFound' => 0, 'duplicates' => 0, 'noCatalogNumber' => true];
 
                     $ar = app()->getLocale() === 'ar';
 
@@ -115,11 +115,19 @@ class ListBookCatalogs extends ListRecords
                         return;
                     }
 
+                    $body = $ar
+                        ? "تم تحديث {$result['updated']} سجل. لم يتم العثور على {$result['notFound']} رقم كتالوج."
+                        : "{$result['updated']} records updated. {$result['notFound']} catalog numbers were not found.";
+
+                    if ($result['duplicates'] > 0) {
+                        $body .= $ar
+                            ? " تم تجاهل {$result['duplicates']} صف مكرر لنفس الرقم (تم اعتماد أول صف فقط)."
+                            : " {$result['duplicates']} rows had a repeated catalog number and were skipped (only the first was applied).";
+                    }
+
                     Notification::make()
                         ->title($ar ? 'تم الاستيراد' : 'Import complete')
-                        ->body($ar
-                            ? "تم تحديث {$result['updated']} سجل. لم يتم العثور على {$result['notFound']} رقم كتالوج."
-                            : "{$result['updated']} records updated. {$result['notFound']} catalog numbers were not found.")
+                        ->body($body)
                         ->success()
                         ->send();
                 }),
@@ -135,7 +143,7 @@ class ListBookCatalogs extends ListRecords
      * ponytail: single-threaded row-by-row save, fine at this table's size
      * (thousands, not millions); batch-upsert if that ever changes.
      *
-     * @return array{updated: int, notFound: int, noCatalogNumber: bool}
+     * @return array{updated: int, notFound: int, duplicates: int, noCatalogNumber: bool}
      */
     protected static function syncBookCatalogsFromExcel(string $path): array
     {
@@ -152,6 +160,8 @@ class ListBookCatalogs extends ListRecords
         $catalogNumberColumn = null;
         $updated = 0;
         $notFound = 0;
+        $duplicates = 0;
+        $seenCatalogNumbers = [];
         $rowNumber = 0;
 
         foreach ($reader->getSheetIterator() as $sheet) {
@@ -188,7 +198,21 @@ class ListBookCatalogs extends ListRecords
                     continue;
                 }
 
-                $record = BookCatalog::where('catalog_number', (int) $catalogNumber)->first();
+                $catalogNumber = (int) $catalogNumber;
+
+                if (isset($seenCatalogNumbers[$catalogNumber])) {
+                    // Same catalog number twice in the file: first occurrence
+                    // wins, this one is reported instead of silently
+                    // overwriting it (catalog_number is unique in the DB,
+                    // so both rows would otherwise target the same record).
+                    $duplicates++;
+
+                    continue;
+                }
+
+                $seenCatalogNumbers[$catalogNumber] = true;
+
+                $record = BookCatalog::where('catalog_number', $catalogNumber)->first();
 
                 if (! $record) {
                     $notFound++;
@@ -230,6 +254,7 @@ class ListBookCatalogs extends ListRecords
         return [
             'updated' => $updated,
             'notFound' => $notFound,
+            'duplicates' => $duplicates,
             'noCatalogNumber' => $catalogNumberColumn === null,
         ];
     }
