@@ -273,6 +273,7 @@ class BookCatalogsTable
                     }
                 });
             })
+            ->columnManagerColumns(3)
             ->deferLoading()
             ->persistFiltersInSession()
             ->persistSearchInSession()
