@@ -82,7 +82,7 @@ class ListBookCatalogs extends ListRecords
             Action::make('importExcel')
                 ->label(app()->getLocale() === 'ar' ? 'استيراد التغييرات' : 'Import changes')
                 ->icon('heroicon-o-arrow-up-tray')
-                ->color('gray')
+                ->color('info')
                 ->schema([
                     FileUpload::make('file')
                         ->label(app()->getLocale() === 'ar' ? 'ملف Excel المعدّل' : 'Edited Excel file')
