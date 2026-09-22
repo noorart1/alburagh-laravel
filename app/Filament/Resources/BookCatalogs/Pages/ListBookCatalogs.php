@@ -47,9 +47,7 @@ class ListBookCatalogs extends ListRecords
     {
         return [
             CreateAction::make()
-                ->label(app()->getLocale() === 'ar' ? 'إضافة كتاب' : 'Add Book')
-                ->icon('heroicon-o-plus')
-                ->color('primary'),
+                ->label(app()->getLocale() === 'ar' ? 'إضافة كتاب' : 'Add Book'),
 
             ExportAction::make('exportExcel')
                 ->label(app()->getLocale() === 'ar' ? 'تصدير Excel' : 'Export Excel')
@@ -84,7 +82,7 @@ class ListBookCatalogs extends ListRecords
             Action::make('importExcel')
                 ->label(app()->getLocale() === 'ar' ? 'استيراد التغييرات' : 'Import changes')
                 ->icon('heroicon-o-arrow-up-tray')
-                ->color('warning')
+                ->color('info')
                 ->schema([
                     FileUpload::make('file')
                         ->label(app()->getLocale() === 'ar' ? 'ملف Excel المعدّل' : 'Edited Excel file')
