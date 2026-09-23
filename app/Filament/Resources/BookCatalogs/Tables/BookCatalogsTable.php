@@ -13,6 +13,7 @@ use Filament\Actions\EditAction;
 use Filament\Actions\ViewAction;
 use Filament\Tables\Columns\ImageColumn;
 use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Collection;
@@ -206,6 +207,16 @@ class BookCatalogsTable
                         ->alignCenter()
                         ->toggleable(isToggledHiddenByDefault: true)
                 )->all(),
+            ])
+            ->filters([
+                SelectFilter::make('category')
+                    ->label(app()->getLocale() === 'ar' ? 'الصنف' : 'Category')
+                    ->options(BookCatalog::categoryOptions())
+                    ->multiple(),
+                SelectFilter::make('publisher')
+                    ->label(app()->getLocale() === 'ar' ? 'الناشر' : 'Publisher')
+                    ->options(BookCatalog::publisherOptions())
+                    ->multiple(),
             ])
             ->recordUrl(fn (BookCatalog $record): string => BookCatalogResource::getUrl('edit', ['record' => $record]))
             ->recordActions([
