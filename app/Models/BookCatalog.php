@@ -18,6 +18,7 @@ class BookCatalog extends Model
             'book' => $ar ? 'كتاب' : 'Book',
             'part' => $ar ? 'جزء' : 'Part',
             'game' => $ar ? 'لعبة' : 'Game',
+            'game_books' => $ar ? 'كتب العاب' : 'Game Books',
             'islamic' => $ar ? 'إسلامي' : 'Islamic',
         ];
     }
