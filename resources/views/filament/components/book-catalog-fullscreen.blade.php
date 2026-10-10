@@ -43,9 +43,9 @@ $isBookCatalogIndex = request()->is('admin/book-catalogs');
 
 .fi-ta-table th:nth-child(2),
 .fi-ta-table td:nth-child(2) {
-    width: 64px !important;
-    min-width: 64px !important;
-    max-width: 64px !important;
+    width: 84px !important;
+    min-width: 84px !important;
+    max-width: 84px !important;
 }
 
 /* =========================================================

@@ -58,7 +58,7 @@ class BookCatalogsTable
         return $table
             ->columns([
                 // Temporary display number (e.g. 1010+), when set, shows beside the real one.
-                $input('catalog_number', '90px', 'الرقم', [])
+                $input('catalog_number', '84px', 'الرقم', [])
                     ->rules(fn (BookCatalog $record): array => [
                         'required',
                         'integer',
@@ -78,10 +78,10 @@ class BookCatalogsTable
                     ->extraImgAttributes(['loading' => 'lazy'])
                     ->toggleable(),
 
-                $input('barcode', '138px', $ar ? 'باركد الكتاب' : 'Barcode', ['nullable', 'max:50'])
+                $input('barcode', '160px', $ar ? 'باركد الكتاب' : 'Barcode', ['nullable', 'max:50'])
                     ->searchable(),
 
-                $input('series_name', '110px', $ar ? 'اسم السلسلة' : 'Series Name', ['nullable', 'max:255'])
+                $input('series_name', '150px', $ar ? 'اسم السلسلة' : 'Series Name', ['nullable', 'max:255'])
                     ->searchable(),
 
                 $input('title', '220px', $ar ? 'اسم الكتاب' : 'Book Title', ['required', 'max:255'])
@@ -107,10 +107,10 @@ class BookCatalogsTable
                 $input('author', '130px', $ar ? 'اسم المؤلف' : 'Author', ['nullable', 'max:255'])
                     ->searchable(),
 
-                $input('illustrator', '110px', $ar ? 'الرسام' : 'Illustrator', ['nullable', 'max:255'])
+                $input('illustrator', '140px', $ar ? 'الرسام' : 'Illustrator', ['nullable', 'max:255'])
                     ->searchable(),
 
-                $input('subject', '110px', $ar ? 'موضوع الكتاب' : 'Subject', ['nullable', 'max:255'])
+                $input('subject', '140px', $ar ? 'موضوع الكتاب' : 'Subject', ['nullable', 'max:255'])
                     ->searchable(),
 
                 $input('edition_number', '82px', $ar ? 'رقم الطبعة' : 'Edition', ['nullable', 'integer', 'min:0'])
@@ -122,7 +122,7 @@ class BookCatalogsTable
                 $input('print_year', '94px', $ar ? 'سنة الطباعة' : 'Print Year', ['nullable', 'integer', 'between:1000,9999'])
                     ->type('number'),
 
-                $input('short_description', '180px', $ar ? 'نبذة مختصرة' : 'Short Description', ['nullable', 'string']),
+                $input('short_description', '260px', $ar ? 'نبذة مختصرة' : 'Short Description', ['nullable', 'string']),
 
                 $input('pages', '88px', $ar ? 'عدد الصفحات' : 'Pages', ['nullable', 'integer', 'min:0'])
                     ->type('number'),
@@ -149,10 +149,10 @@ class BookCatalogsTable
                 $input('deposit_year', '96px', $ar ? 'سنة الإيداع' : 'Deposit Year', ['nullable', 'integer', 'between:1000,9999'])
                     ->type('number'),
 
-                $input('size', '118px', $ar ? 'القياس' : 'Size', ['nullable', 'max:100'])
+                $input('size', '140px', $ar ? 'القياس' : 'Size', ['nullable', 'max:100'])
                     ->searchable(),
 
-                $input('weight', '86px', $ar ? 'الوزن' : 'Weight', ['nullable', 'numeric', 'min:0'])
+                $input('weight', '100px', $ar ? 'الوزن' : 'Weight', ['nullable', 'numeric', 'min:0'])
                     ->type('number'),
 
                 $input('age_group', '105px', $ar ? 'الفئة العمرية' : 'Age Group', ['nullable', 'max:100'])
