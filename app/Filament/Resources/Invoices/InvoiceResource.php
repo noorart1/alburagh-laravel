@@ -101,8 +101,10 @@ class InvoiceResource extends Resource
         $sheet->setCellValue("D{$row}", 'الإجمالي');
         $sheet->setCellValue("E{$row}", $row > 7 ? '=SUM(E7:E'.($row - 1).')' : 0);
         $sheet->getStyle("D{$row}:E{$row}")->getFont()->setBold(true);
-        $sheet->getStyle("C7:C{$row}")->getNumberFormat()->setFormatCode('#,##0.##');
-        $sheet->getStyle("E7:E{$row}")->getNumberFormat()->setFormatCode('#,##0.##');
+        // Dinar amounts are whole numbers; USD/AED keep cents.
+        $format = in_array($invoice->currency, ['usd', 'aed'], true) ? '#,##0.00' : '#,##0';
+        $sheet->getStyle("C7:C{$row}")->getNumberFormat()->setFormatCode($format);
+        $sheet->getStyle("E7:E{$row}")->getNumberFormat()->setFormatCode($format);
 
         foreach (['A' => 18, 'B' => 45, 'C' => 12, 'D' => 10, 'E' => 14] as $column => $width) {
             $sheet->getColumnDimension($column)->setWidth($width);

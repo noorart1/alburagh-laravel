@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\BookCatalogs\Schemas;
 
+use App\Models\Invoice;
 use Filament\Infolists\Components\ImageEntry;
 use Filament\Infolists\Components\TextEntry;
 use Filament\Schemas\Components\Section;
@@ -102,11 +103,11 @@ class BookCatalogInfolist
                     ->schema([
                         TextEntry::make('price_usd')
                             ->label(app()->getLocale() === 'ar' ? 'السعر بالدولار' : 'USD')
-                            ->formatStateUsing(fn ($state) => $state === null ? '—' : number_format((float) $state, 2)),
+                            ->formatStateUsing(fn ($state) => $state === null ? '—' : Invoice::formatAmount($state)),
 
                         TextEntry::make('price_aed')
                             ->label(app()->getLocale() === 'ar' ? 'بالدرهم الإماراتي' : 'AED')
-                            ->formatStateUsing(fn ($state) => $state === null ? '—' : number_format((float) $state, 2)),
+                            ->formatStateUsing(fn ($state) => $state === null ? '—' : Invoice::formatAmount($state)),
 
                         TextEntry::make('price_iqd')
                             ->label(app()->getLocale() === 'ar' ? 'بالدينار العراقي' : 'IQD')

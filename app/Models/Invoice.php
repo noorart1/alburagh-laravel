@@ -35,6 +35,14 @@ class Invoice extends Model
         ];
     }
 
+    /** 12200 → "12,200", 4.5 → "4.50": decimals only when there is a fraction. */
+    public static function formatAmount(mixed $amount): string
+    {
+        $amount = (float) $amount;
+
+        return number_format($amount, fmod($amount, 1) == 0.0 ? 0 : 2);
+    }
+
     public function items(): HasMany
     {
         return $this->hasMany(InvoiceItem::class);

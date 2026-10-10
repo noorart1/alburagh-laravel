@@ -115,7 +115,7 @@ class InvoiceForm
 
                                 TextEntry::make('line_total')
                                     ->label($ar ? 'المجموع' : 'Total')
-                                    ->state(fn (Get $get): string => number_format((float) $get('unit_price') * (int) $get('quantity'), 2)),
+                                    ->state(fn (Get $get): string => Invoice::formatAmount((float) $get('unit_price') * (int) $get('quantity'))),
                             ])
                             ->table([
                                 TableColumn::make($ar ? 'الكتاب' : 'Book')->width('30%'),
@@ -132,9 +132,8 @@ class InvoiceForm
                             ->label($ar ? 'الإجمالي' : 'Grand Total')
                             ->inlineLabel()
                             ->weight('bold')
-                            ->state(fn (Get $get): string => number_format(
+                            ->state(fn (Get $get): string => Invoice::formatAmount(
                                 collect($get('items') ?? [])->sum(fn (array $item) => (float) ($item['unit_price'] ?? 0) * (int) ($item['quantity'] ?? 0)),
-                                2,
                             )),
                     ])
                     ->columnSpanFull(),

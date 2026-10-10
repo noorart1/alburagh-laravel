@@ -8,6 +8,14 @@ class BookCatalog extends Model
 {
     protected $guarded = [];
 
+    // float, not the DB's "4.00" decimal string, so inline inputs show 4
+    protected $casts = [
+        'price_usd' => 'float',
+        'price_aed' => 'float',
+        'price_iqd' => 'float',
+        'cost_iqd' => 'float',
+    ];
+
     /** @return array<string, string> */
     public static function categoryOptions(): array
     {

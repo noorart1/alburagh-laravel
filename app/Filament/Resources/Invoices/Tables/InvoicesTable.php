@@ -54,9 +54,11 @@ class InvoicesTable
                 // currency for a meaningful total, or group by buyer+currency if mixing is common.
                 TextColumn::make('total')
                     ->label($ar ? 'الإجمالي' : 'Total')
-                    ->numeric(decimalPlaces: 2)
+                    ->formatStateUsing(fn ($state): string => Invoice::formatAmount($state))
                     ->sortable()
-                    ->summarize(Sum::make()->label($ar ? 'مجموع المشتريات' : 'Total purchases')),
+                    ->summarize(Sum::make()
+                        ->label($ar ? 'مجموع المشتريات' : 'Total purchases')
+                        ->formatStateUsing(fn ($state): string => Invoice::formatAmount($state))),
             ])
             ->groups([
                 Group::make('buyer_name')
