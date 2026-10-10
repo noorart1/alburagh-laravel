@@ -52,7 +52,8 @@ class BookCatalogsTable
             ->width($width)
             ->label($label)
             ->rules($rules)
-            ->extraInputAttributes(['step' => 'any']) // decimals like 4.50 in number inputs
+            // step: decimals like 4.50 in number inputs; title: full value on hover when clipped
+            ->extraInputAttributes(['step' => 'any', 'x-bind:title' => 'state'])
             ->toggleable();
 
         return $table
