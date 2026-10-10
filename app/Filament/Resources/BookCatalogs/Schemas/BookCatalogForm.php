@@ -138,20 +138,7 @@ class BookCatalogForm
                                             ->numeric()
                                             ->step('1')
                                             ->minValue(0),
-
-                                        TextInput::make('cost_aed')
-                                            ->label(app()->getLocale() === 'ar' ? 'الكلفة بالدرهم' : 'Cost AED')
-                                            ->numeric()
-                                            ->step('0.01')
-                                            ->minValue(0),
-
-                                        TextInput::make('cost_usd')
-                                            ->label(app()->getLocale() === 'ar' ? 'الكلفة بالدولار' : 'Cost USD')
-                                            ->numeric()
-                                            ->step('0.01')
-                                            ->minValue(0),
-                                    ])
-                                    ->columns(3),
+                                    ]),
                             ]),
 
                         // ستون چپ

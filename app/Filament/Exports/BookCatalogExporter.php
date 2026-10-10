@@ -84,8 +84,6 @@ class BookCatalogExporter extends Exporter
             ExportColumn::make('price_iqd')->label($ar ? 'دينار' : 'IQD'),
             ExportColumn::make('quantity')->label($ar ? 'الكمية' : 'Quantity'),
             ExportColumn::make('cost_iqd')->label($ar ? 'الكلفة دينار' : 'Cost IQD'),
-            ExportColumn::make('cost_aed')->label($ar ? 'الكلفة درهم' : 'Cost AED'),
-            ExportColumn::make('cost_usd')->label($ar ? 'الكلفة دولار' : 'Cost USD'),
             ExportColumn::make('deposit_number')->label($ar ? 'رقم الإيداع' : 'Deposit No.'),
             ExportColumn::make('deposit_year')->label($ar ? 'سنة الإيداع' : 'Deposit Year'),
             ExportColumn::make('size')->label($ar ? 'القياس' : 'Size'),

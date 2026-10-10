@@ -122,16 +122,8 @@ class BookCatalogInfolist
                         TextEntry::make('cost_iqd')
                             ->label(app()->getLocale() === 'ar' ? 'الكلفة بالدينار' : 'Cost IQD')
                             ->formatStateUsing(fn ($state) => $state === null ? '—' : number_format((float) $state, 0)),
-
-                        TextEntry::make('cost_aed')
-                            ->label(app()->getLocale() === 'ar' ? 'الكلفة بالدرهم' : 'Cost AED')
-                            ->formatStateUsing(fn ($state) => $state === null ? '—' : number_format((float) $state, 2)),
-
-                        TextEntry::make('cost_usd')
-                            ->label(app()->getLocale() === 'ar' ? 'الكلفة بالدولار' : 'Cost USD')
-                            ->formatStateUsing(fn ($state) => $state === null ? '—' : number_format((float) $state, 2)),
                     ])
-                    ->columns(4),
+                    ->columns(2),
 
                 Section::make(app()->getLocale() === 'ar' ? 'الإيداع' : 'Deposit')
                     ->schema([

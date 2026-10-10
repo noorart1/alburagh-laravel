@@ -184,18 +184,6 @@ class BookCatalogsTable
                     ->numeric(decimalPlaces: 0)
                     ->toggleable(),
 
-                TextColumn::make('cost_aed')
-                    ->width('84px')
-                    ->label(app()->getLocale() === 'ar' ? 'الكلفة درهم' : 'Cost AED')
-                    ->numeric(decimalPlaces: 2)
-                    ->toggleable(),
-
-                TextColumn::make('cost_usd')
-                    ->width('84px')
-                    ->label(app()->getLocale() === 'ar' ? 'الكلفة دولار' : 'Cost USD')
-                    ->numeric(decimalPlaces: 2)
-                    ->toggleable(),
-
                 TextColumn::make('deposit_number')
                     ->width('88px')
                     ->label(app()->getLocale() === 'ar' ? 'رقم الإيداع' : 'Deposit No.')
