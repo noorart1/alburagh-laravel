@@ -833,11 +833,18 @@ html.dark .fi-no-notification[class*="warning"] {
     }
 }
 
-/* Inline quantity input: no spinner arrows, tight padding, so the whole number fits */
+/* Inline-editable cells: tight padding so the value fits the column;
+   numbers without spinner arrows */
+.fi-ta-text-input input,
+.fi-ta-select select {
+    padding-inline: 6px !important;
+    padding-block: 2px !important;
+    font-size: 0.8125rem !important;
+}
+
 .fi-ta-text-input input[type="number"] {
     -moz-appearance: textfield;
     appearance: textfield;
-    padding-inline: 6px !important;
     text-align: center;
     font-variant-numeric: tabular-nums;
 }

@@ -26,10 +26,22 @@ class InvoiceTest extends TestCase
         $this->actingAs(User::factory()->create(['is_admin' => true, 'is_active' => true]));
         $book = BookCatalog::create(['catalog_number' => 5, 'title' => 'كتاب']);
 
+        BookCatalog::create(['catalog_number' => 6, 'title' => 'آخر']);
+
         Livewire::test(ListBookCatalogs::class)
             ->loadTable()
-            ->call('updateTableColumnState', 'quantity', (string) $book->getKey(), 7);
-        $this->assertSame(7, $book->fresh()->quantity);
+            ->call('updateTableColumnState', 'quantity', (string) $book->getKey(), 7)
+            ->call('updateTableColumnState', 'title', (string) $book->getKey(), 'عنوان جديد')
+            ->call('updateTableColumnState', 'category', (string) $book->getKey(), 'game')
+            ->call('updateTableColumnState', 'price_usd', (string) $book->getKey(), '')
+            ->call('updateTableColumnState', 'catalog_number', (string) $book->getKey(), 6); // duplicate → rejected
+
+        $book->refresh();
+        $this->assertSame(7, $book->quantity);
+        $this->assertSame('عنوان جديد', $book->title);
+        $this->assertSame('game', $book->category);
+        $this->assertNull($book->price_usd);
+        $this->assertSame(5, $book->catalog_number);
 
         Livewire::test(EditBookCatalog::class, ['record' => $book->getKey()])->assertOk();
         Livewire::test(ViewBookCatalog::class, ['record' => $book->getKey()])->assertOk();

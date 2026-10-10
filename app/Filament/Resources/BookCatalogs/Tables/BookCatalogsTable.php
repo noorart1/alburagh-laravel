@@ -4,7 +4,6 @@ namespace App\Filament\Resources\BookCatalogs\Tables;
 
 use App\Models\BookCatalog;
 use App\Filament\Exports\BookCatalogExporter;
-use App\Filament\Resources\BookCatalogs\BookCatalogResource;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\ExportBulkAction;
@@ -12,12 +11,14 @@ use Filament\Actions\Exports\Enums\ExportFormat;
 use Filament\Actions\EditAction;
 use Filament\Actions\ViewAction;
 use Filament\Tables\Columns\ImageColumn;
+use Filament\Tables\Columns\SelectColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Columns\TextInputColumn;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Collection;
+use Illuminate\Validation\Rule;
 
 class BookCatalogsTable
 {
@@ -44,20 +45,29 @@ class BookCatalogsTable
     public static function configure(Table $table): Table
     {
         $optionColumns = static::optionColumns();
+        $ar = app()->getLocale() === 'ar';
+
+        // Every data column is edited in place (no need to open the edit page).
+        $input = fn (string $name, string $width, string $label, array $rules): TextInputColumn => TextInputColumn::make($name)
+            ->width($width)
+            ->label($label)
+            ->rules($rules)
+            ->extraInputAttributes(['step' => 'any']) // decimals like 4.50 in number inputs
+            ->toggleable();
 
         return $table
             ->columns([
-                TextColumn::make('catalog_number')
-                    ->width('74px')
-                    ->label('الرقم')
-                    ->formatStateUsing(
-                        fn ($state, BookCatalog $record): string =>
-                            filled($record->temporary_catalog_number)
-                                ? (string) $record->temporary_catalog_number
-                                : (string) $state
-                    )
-                    ->searchable()
-                    ->copyable(),
+                // Temporary display number (e.g. 1010+), when set, shows beside the real one.
+                $input('catalog_number', '90px', 'الرقم', [])
+                    ->rules(fn (BookCatalog $record): array => [
+                        'required',
+                        'integer',
+                        Rule::unique('book_catalogs', 'catalog_number')->ignore($record->getKey()),
+                    ])
+                    ->type('number')
+                    ->prefix(fn (BookCatalog $record): ?string => $record->temporary_catalog_number ?: null)
+                    ->toggleable(false)
+                    ->searchable(),
 
                 ImageColumn::make('cover_image')
                     ->width('68px')
@@ -68,150 +78,85 @@ class BookCatalogsTable
                     ->extraImgAttributes(['loading' => 'lazy'])
                     ->toggleable(),
 
-                TextColumn::make('barcode')
-                    ->width('138px')
-                    ->label(app()->getLocale() === 'ar' ? 'باركد الكتاب' : 'Barcode')
-                    ->searchable()
-                    ->copyable()
-                    ->toggleable(),
+                $input('barcode', '138px', $ar ? 'باركد الكتاب' : 'Barcode', ['nullable', 'max:50'])
+                    ->searchable(),
 
-                TextColumn::make('series_name')
-                    ->width('55px')
-                    ->label(app()->getLocale() === 'ar' ? 'اسم السلسلة' : 'Series Name')
-                    ->searchable()
-                    ->limit(14)
-                    ->toggleable(),
+                $input('series_name', '110px', $ar ? 'اسم السلسلة' : 'Series Name', ['nullable', 'max:255'])
+                    ->searchable(),
 
-                TextColumn::make('title')
-                    ->width('220px')
-                    ->label(app()->getLocale() === 'ar' ? 'اسم الكتاب' : 'Book Title')
-                    ->searchable()
-                    ->limit(45)
-                    ->tooltip(fn (BookCatalog $record): string => $record->title)
-                    ->toggleable(),
-                TextColumn::make('category')
-                    ->width('90px')
-                    ->limit(17)
-                    ->label(app()->getLocale() === 'ar' ? 'الصنف' : 'Category')
-                    ->formatStateUsing(fn (?string $state): ?string => BookCatalog::categoryOptions()[$state] ?? $state)
+                $input('title', '220px', $ar ? 'اسم الكتاب' : 'Book Title', ['required', 'max:255'])
+                    ->searchable(),
+
+                SelectColumn::make('category')
+                    ->width('120px')
+                    ->label($ar ? 'الصنف' : 'Category')
+                    ->options(BookCatalog::categoryOptions())
+                    ->rules(['required', Rule::in(array_keys(BookCatalog::categoryOptions()))])
+                    ->selectablePlaceholder(false)
                     ->searchable()
                     ->toggleable(),
 
-                TextColumn::make('publisher')
-                    ->width('60px')
-                    ->limit(17)
-                    ->label(app()->getLocale() === 'ar' ? 'الناشر' : 'Publisher')
-                    ->formatStateUsing(fn (?string $state): ?string => BookCatalog::publisherOptions()[$state] ?? $state)
-                    ->searchable()
-                    ->toggleable(),
-                TextColumn::make('author')
-                    ->width('105px')
-                    ->label(app()->getLocale() === 'ar' ? 'اسم المؤلف' : 'Author')
-                    ->searchable()
-                    ->limit(28)
-                    ->toggleable(),
-
-                TextColumn::make('illustrator')
-                    ->width('80px')
-                    ->label(app()->getLocale() === 'ar' ? 'الرسام' : 'Illustrator')
-                    ->searchable()
-                    ->limit(15)
-                    ->toggleable(),
-
-                TextColumn::make('subject')
-                    ->width('60px')
-                    ->label(app()->getLocale() === 'ar' ? 'موضوع الكتاب' : 'Subject')
-                    ->searchable()
-                    ->limit(15)
-                    ->toggleable(),
-
-                TextColumn::make('edition_number')
-                    ->width('82px')
-                    ->label(app()->getLocale() === 'ar' ? 'رقم الطبعة' : 'Edition')
-                    ->toggleable(),
-
-                TextColumn::make('print_place')
-                    ->width('95px')
-                    ->label(app()->getLocale() === 'ar' ? 'مكان الطباعة' : 'Print Place')
+                SelectColumn::make('publisher')
+                    ->width('170px')
+                    ->label($ar ? 'الناشر' : 'Publisher')
+                    ->options(BookCatalog::publisherOptions())
+                    ->rules(['nullable', Rule::in(array_keys(BookCatalog::publisherOptions()))])
                     ->searchable()
                     ->toggleable(),
 
-                TextColumn::make('print_year')
-                    ->width('94px')
-                    ->label(app()->getLocale() === 'ar' ? 'سنة الطباعة' : 'Print Year')
-                    ->toggleable(),
+                $input('author', '130px', $ar ? 'اسم المؤلف' : 'Author', ['nullable', 'max:255'])
+                    ->searchable(),
 
-                TextColumn::make('short_description')
-                    ->width('110px')
-                    ->label(app()->getLocale() === 'ar' ? 'نبذة مختصرة' : 'Short Description')
-                    ->limit(20)
-                    ->toggleable(),
+                $input('illustrator', '110px', $ar ? 'الرسام' : 'Illustrator', ['nullable', 'max:255'])
+                    ->searchable(),
 
-                TextColumn::make('pages')
-                    ->width('88px')
-                    ->label(app()->getLocale() === 'ar' ? 'عدد الصفحات' : 'Pages')
-                    ->toggleable(),
+                $input('subject', '110px', $ar ? 'موضوع الكتاب' : 'Subject', ['nullable', 'max:255'])
+                    ->searchable(),
 
-                TextColumn::make('price_usd')
-                    ->width('74px')
-                    ->label(app()->getLocale() === 'ar' ? 'دولار' : 'USD')
-                    ->numeric(decimalPlaces: 2)
-                    ->toggleable(),
+                $input('edition_number', '82px', $ar ? 'رقم الطبعة' : 'Edition', ['nullable', 'integer', 'min:0'])
+                    ->type('number'),
 
-                TextColumn::make('price_aed')
-                    ->width('74px')
-                    ->label(app()->getLocale() === 'ar' ? 'درهم' : 'AED')
-                    ->numeric(decimalPlaces: 2)
-                    ->toggleable(),
+                $input('print_place', '110px', $ar ? 'مكان الطباعة' : 'Print Place', ['nullable', 'max:255'])
+                    ->searchable(),
 
-                TextColumn::make('price_iqd')
-                    ->width('84px')
-                    ->label(app()->getLocale() === 'ar' ? 'دينار' : 'IQD')
-                    ->numeric(decimalPlaces: 0)
-                    ->toggleable(),
+                $input('print_year', '94px', $ar ? 'سنة الطباعة' : 'Print Year', ['nullable', 'integer', 'between:1000,9999'])
+                    ->type('number'),
 
-                TextInputColumn::make('quantity')
-                    ->width('100px')
-                    ->label(app()->getLocale() === 'ar' ? 'الكمية' : 'Quantity')
+                $input('short_description', '180px', $ar ? 'نبذة مختصرة' : 'Short Description', ['nullable', 'string']),
+
+                $input('pages', '88px', $ar ? 'عدد الصفحات' : 'Pages', ['nullable', 'integer', 'min:0'])
+                    ->type('number'),
+
+                $input('price_usd', '84px', $ar ? 'دولار' : 'USD', ['nullable', 'numeric', 'min:0'])
+                    ->type('number'),
+
+                $input('price_aed', '84px', $ar ? 'درهم' : 'AED', ['nullable', 'numeric', 'min:0'])
+                    ->type('number'),
+
+                $input('price_iqd', '94px', $ar ? 'دينار' : 'IQD', ['nullable', 'numeric', 'min:0'])
+                    ->type('number'),
+
+                $input('quantity', '100px', $ar ? 'الكمية' : 'Quantity', ['required', 'integer', 'min:0'])
                     ->type('number')
-                    ->rules(['required', 'integer', 'min:0'])
-                    ->sortable()
-                    ->toggleable(),
+                    ->sortable(),
 
-                TextColumn::make('cost_iqd')
-                    ->width('84px')
-                    ->label(app()->getLocale() === 'ar' ? 'الكلفة دينار' : 'Cost IQD')
-                    ->numeric(decimalPlaces: 0)
-                    ->toggleable(),
+                $input('cost_iqd', '94px', $ar ? 'الكلفة دينار' : 'Cost IQD', ['nullable', 'numeric', 'min:0'])
+                    ->type('number'),
 
-                TextColumn::make('deposit_number')
-                    ->width('88px')
-                    ->label(app()->getLocale() === 'ar' ? 'رقم الإيداع' : 'Deposit No.')
-                    ->searchable()
-                    ->toggleable(),
+                $input('deposit_number', '100px', $ar ? 'رقم الإيداع' : 'Deposit No.', ['nullable', 'max:100'])
+                    ->searchable(),
 
-                TextColumn::make('deposit_year')
-                    ->width('96px')
-                    ->label(app()->getLocale() === 'ar' ? 'سنة الإيداع' : 'Deposit Year')
-                    ->toggleable(),
+                $input('deposit_year', '96px', $ar ? 'سنة الإيداع' : 'Deposit Year', ['nullable', 'integer', 'between:1000,9999'])
+                    ->type('number'),
 
-                TextColumn::make('size')
-                    ->width('118px')
-                    ->label(app()->getLocale() === 'ar' ? 'القياس' : 'Size')
-                    ->searchable()
-                    ->toggleable(),
+                $input('size', '118px', $ar ? 'القياس' : 'Size', ['nullable', 'max:100'])
+                    ->searchable(),
 
-                TextColumn::make('weight')
-                    ->width('86px')
-                    ->label(app()->getLocale() === 'ar' ? 'الوزن' : 'Weight')
-                    ->numeric(decimalPlaces: 3)
-                    ->toggleable(),
+                $input('weight', '86px', $ar ? 'الوزن' : 'Weight', ['nullable', 'numeric', 'min:0'])
+                    ->type('number'),
 
-                TextColumn::make('age_group')
-                    ->width('105px')
-                    ->label(app()->getLocale() === 'ar' ? 'الفئة العمرية' : 'Age Group')
-                    ->searchable()
-                    ->toggleable(),
+                $input('age_group', '105px', $ar ? 'الفئة العمرية' : 'Age Group', ['nullable', 'max:100'])
+                    ->searchable(),
 
                 // One ✓ column per Category/Publisher option (hidden by default; ticking it
                 // in the column manager both shows it and filters to matching records, see
@@ -234,7 +179,7 @@ class BookCatalogsTable
                     ->options(BookCatalog::publisherOptions())
                     ->multiple(),
             ])
-            ->recordUrl(fn (BookCatalog $record): string => BookCatalogResource::getUrl('edit', ['record' => $record]))
+            ->recordUrl(null)
             ->recordActions([
                 ViewAction::make()
                     ->label(app()->getLocale() === 'ar' ? 'عرض' : 'View'),

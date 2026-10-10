@@ -44,14 +44,15 @@ class ListBookCatalogs extends ListRecords
     }
 
     /**
-     * Inline quantity edits only change that one cell, which the browser
-     * already shows, so skip re-rendering the whole (wide) table.
+     * An inline edit only changes that one cell, which the browser already
+     * shows, so skip re-rendering the whole (wide) table. Category/publisher
+     * still re-render because the ✓ columns and filters depend on them.
      */
     public function updateTableColumnState(string $column, string $record, mixed $input): mixed
     {
         $result = parent::updateTableColumnState($column, $record, $input);
 
-        if ($column === 'quantity' && ! isset($result['error'])) {
+        if (! in_array($column, ['category', 'publisher'], true) && ! isset($result['error'])) {
             $this->skipRender();
         }
 
