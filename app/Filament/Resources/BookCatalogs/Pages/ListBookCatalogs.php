@@ -231,6 +231,10 @@ class ListBookCatalogs extends ListRecords
                     $value = is_string($value) ? trim($value) : $value;
                     $value = $value === '' ? null : $value;
 
+                    if ($field === 'quantity') {
+                        $value = (int) $value; // NOT NULL column
+                    }
+
                     if ($field === 'category' && $value !== null) {
                         $value = $categoryKeysByLabel[$value] ?? $value;
                     }

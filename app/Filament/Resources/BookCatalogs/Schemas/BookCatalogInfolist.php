@@ -14,16 +14,6 @@ class BookCatalogInfolist
         return $schema
             ->columns(2)
             ->components([
-                Section::make(app()->getLocale() === 'ar' ? 'صورة الغلاف' : 'Cover')
-                    ->schema([
-                        ImageEntry::make('cover_image')
-                            ->hiddenLabel()
-                            ->disk('public')
-                            ->height(260)
-                            ->square(false),
-                    ])
-                    ->columnSpan(1),
-
                 Section::make(app()->getLocale() === 'ar' ? 'المعلومات الأساسية' : 'Basic Information')
                     ->schema([
 
@@ -63,6 +53,21 @@ class BookCatalogInfolist
                             ->placeholder('—'),
                     ])
                     ->columns(2)
+                    ->columnSpan(1),
+
+                Section::make(app()->getLocale() === 'ar' ? 'صورة الغلاف' : 'Cover')
+                    ->schema([
+                        ImageEntry::make('cover_image')
+                            ->hiddenLabel()
+                            ->disk('public')
+                            ->height(260)
+                            ->square(false),
+
+                        TextEntry::make('notes')
+                            ->label(app()->getLocale() === 'ar' ? 'ملاحظات' : 'Notes')
+                            ->placeholder('—')
+                            ->columnSpanFull(),
+                    ])
                     ->columnSpan(1),
 
                 Section::make(app()->getLocale() === 'ar' ? 'الطباعة والمواصفات' : 'Printing & Specifications')
@@ -109,6 +114,25 @@ class BookCatalogInfolist
                     ])
                     ->columns(3),
 
+                Section::make(app()->getLocale() === 'ar' ? 'الكمية والكلفة' : 'Quantity & Cost')
+                    ->schema([
+                        TextEntry::make('quantity')
+                            ->label(app()->getLocale() === 'ar' ? 'الكمية' : 'Quantity'),
+
+                        TextEntry::make('cost_iqd')
+                            ->label(app()->getLocale() === 'ar' ? 'الكلفة بالدينار' : 'Cost IQD')
+                            ->formatStateUsing(fn ($state) => $state === null ? '—' : number_format((float) $state, 0)),
+
+                        TextEntry::make('cost_aed')
+                            ->label(app()->getLocale() === 'ar' ? 'الكلفة بالدرهم' : 'Cost AED')
+                            ->formatStateUsing(fn ($state) => $state === null ? '—' : number_format((float) $state, 2)),
+
+                        TextEntry::make('cost_usd')
+                            ->label(app()->getLocale() === 'ar' ? 'الكلفة بالدولار' : 'Cost USD')
+                            ->formatStateUsing(fn ($state) => $state === null ? '—' : number_format((float) $state, 2)),
+                    ])
+                    ->columns(4),
+
                 Section::make(app()->getLocale() === 'ar' ? 'الإيداع' : 'Deposit')
                     ->schema([
                         TextEntry::make('deposit_number')
@@ -125,11 +149,6 @@ class BookCatalogInfolist
                     ->schema([
                         TextEntry::make('short_description')
                             ->label(app()->getLocale() === 'ar' ? 'نبذة مختصرة عن الكتاب' : 'Short Description')
-                            ->placeholder('—')
-                            ->columnSpanFull(),
-
-                        TextEntry::make('notes')
-                            ->label(app()->getLocale() === 'ar' ? 'ملاحظات' : 'Notes')
                             ->placeholder('—')
                             ->columnSpanFull(),
                     ])

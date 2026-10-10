@@ -13,6 +13,7 @@ use Filament\Actions\EditAction;
 use Filament\Actions\ViewAction;
 use Filament\Tables\Columns\ImageColumn;
 use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Columns\TextInputColumn;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
@@ -82,10 +83,11 @@ class BookCatalogsTable
                     ->toggleable(),
 
                 TextColumn::make('title')
-                    ->width('68px')
+                    ->width('220px')
                     ->label(app()->getLocale() === 'ar' ? 'اسم الكتاب' : 'Book Title')
                     ->searchable()
-                    ->limit(17)
+                    ->limit(45)
+                    ->tooltip(fn (BookCatalog $record): string => $record->title)
                     ->toggleable(),
                 TextColumn::make('category')
                     ->width('90px')
@@ -166,6 +168,32 @@ class BookCatalogsTable
                     ->width('84px')
                     ->label(app()->getLocale() === 'ar' ? 'دينار' : 'IQD')
                     ->numeric(decimalPlaces: 0)
+                    ->toggleable(),
+
+                TextInputColumn::make('quantity')
+                    ->width('90px')
+                    ->label(app()->getLocale() === 'ar' ? 'الكمية' : 'Quantity')
+                    ->type('number')
+                    ->rules(['required', 'integer', 'min:0'])
+                    ->sortable()
+                    ->toggleable(),
+
+                TextColumn::make('cost_iqd')
+                    ->width('84px')
+                    ->label(app()->getLocale() === 'ar' ? 'الكلفة دينار' : 'Cost IQD')
+                    ->numeric(decimalPlaces: 0)
+                    ->toggleable(),
+
+                TextColumn::make('cost_aed')
+                    ->width('84px')
+                    ->label(app()->getLocale() === 'ar' ? 'الكلفة درهم' : 'Cost AED')
+                    ->numeric(decimalPlaces: 2)
+                    ->toggleable(),
+
+                TextColumn::make('cost_usd')
+                    ->width('84px')
+                    ->label(app()->getLocale() === 'ar' ? 'الكلفة دولار' : 'Cost USD')
+                    ->numeric(decimalPlaces: 2)
                     ->toggleable(),
 
                 TextColumn::make('deposit_number')

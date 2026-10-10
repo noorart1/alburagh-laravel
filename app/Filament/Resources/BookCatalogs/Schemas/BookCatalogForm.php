@@ -28,7 +28,6 @@ class BookCatalogForm
                                             ->label('الرقم')
                                             ->numeric()
                                             ->required()
-                                            ->minValue(1000)
                                             ->default(fn (): int => max(
                                                 1000,
                                                 ((int) BookCatalog::query()->max('catalog_number')) + 1
@@ -40,8 +39,8 @@ class BookCatalogForm
                                             )
                                             ->helperText(
                                                 app()->getLocale() === 'ar'
-                                                    ? 'رقم فريد يبدأ من 1000 ويمكن تعديله.'
-                                                    : 'Unique number starting from 1000. Editable.'
+                                                    ? 'رقم فريد، يمكن تعديله بحرية.'
+                                                    : 'Unique number, freely editable.'
                                             ),
 
                                         TextInput::make('temporary_catalog_number')
@@ -99,6 +98,14 @@ class BookCatalogForm
                                         TextInput::make('age_group')
                                             ->label(app()->getLocale() === 'ar' ? 'الفئة العمرية' : 'Age Group')
                                             ->maxLength(100),
+
+                                        TextInput::make('quantity')
+                                            ->label(app()->getLocale() === 'ar' ? 'الكمية' : 'Quantity')
+                                            ->numeric()
+                                            ->integer()
+                                            ->minValue(0)
+                                            ->default(0)
+                                            ->required(),
                                     ])
                                     ->columns(2),
 
@@ -124,6 +131,32 @@ class BookCatalogForm
                                     ])
                                     ->columns(3),
 
+                                Section::make(app()->getLocale() === 'ar' ? 'الكلفة' : 'Cost')
+                                    ->schema([
+                                        TextInput::make('cost_iqd')
+                                            ->label(app()->getLocale() === 'ar' ? 'الكلفة بالدينار' : 'Cost IQD')
+                                            ->numeric()
+                                            ->step('1')
+                                            ->minValue(0),
+
+                                        TextInput::make('cost_aed')
+                                            ->label(app()->getLocale() === 'ar' ? 'الكلفة بالدرهم' : 'Cost AED')
+                                            ->numeric()
+                                            ->step('0.01')
+                                            ->minValue(0),
+
+                                        TextInput::make('cost_usd')
+                                            ->label(app()->getLocale() === 'ar' ? 'الكلفة بالدولار' : 'Cost USD')
+                                            ->numeric()
+                                            ->step('0.01')
+                                            ->minValue(0),
+                                    ])
+                                    ->columns(3),
+                            ]),
+
+                        // ستون چپ
+                        Grid::make(1)
+                            ->schema([
                                 Section::make(app()->getLocale() === 'ar' ? 'الوصف والغلاف' : 'Description & Cover')
                                     ->schema([
                                         Textarea::make('short_description')
@@ -142,12 +175,13 @@ class BookCatalogForm
                                             ->downloadable()
                                             ->openable()
                                             ->columnSpanFull(),
-                                    ]),
-                            ]),
 
-                        // ستون چپ
-                        Grid::make(1)
-                            ->schema([
+                                        Textarea::make('notes')
+                                            ->label(app()->getLocale() === 'ar' ? 'ملاحظات' : 'Notes')
+                                            ->rows(3)
+                                            ->columnSpanFull(),
+                                    ]),
+
                                 Section::make(app()->getLocale() === 'ar' ? 'الطباعة والمواصفات' : 'Printing & Specifications')
                                     ->schema([
                                         TextInput::make('edition_number')

@@ -46,13 +46,11 @@ class BookCatalogExporter extends Exporter
             TextInput::make('catalog_number_from')
                 ->label($ar ? 'من #' : 'From #')
                 ->numeric()
-                ->minValue(1000)
                 ->placeholder('1000'),
 
             TextInput::make('catalog_number_to')
                 ->label($ar ? 'إلى #' : 'To #')
                 ->numeric()
-                ->minValue(1000)
                 ->placeholder('1523'),
         ];
     }
@@ -84,6 +82,10 @@ class BookCatalogExporter extends Exporter
             ExportColumn::make('price_usd')->label($ar ? 'دولار' : 'USD'),
             ExportColumn::make('price_aed')->label($ar ? 'درهم' : 'AED'),
             ExportColumn::make('price_iqd')->label($ar ? 'دينار' : 'IQD'),
+            ExportColumn::make('quantity')->label($ar ? 'الكمية' : 'Quantity'),
+            ExportColumn::make('cost_iqd')->label($ar ? 'الكلفة دينار' : 'Cost IQD'),
+            ExportColumn::make('cost_aed')->label($ar ? 'الكلفة درهم' : 'Cost AED'),
+            ExportColumn::make('cost_usd')->label($ar ? 'الكلفة دولار' : 'Cost USD'),
             ExportColumn::make('deposit_number')->label($ar ? 'رقم الإيداع' : 'Deposit No.'),
             ExportColumn::make('deposit_year')->label($ar ? 'سنة الإيداع' : 'Deposit Year'),
             ExportColumn::make('size')->label($ar ? 'القياس' : 'Size'),
