@@ -833,6 +833,20 @@ html.dark .fi-no-notification[class*="warning"] {
     }
 }
 
+/* Inline quantity input: no spinner arrows, tight padding, so the whole number fits */
+.fi-ta-text-input input[type="number"] {
+    -moz-appearance: textfield;
+    appearance: textfield;
+    padding-inline: 6px !important;
+    text-align: center;
+    font-variant-numeric: tabular-nums;
+}
+
+.fi-ta-text-input input[type="number"]::-webkit-inner-spin-button,
+.fi-ta-text-input input[type="number"]::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
 </style>
 
 <div id="bc-pin-wrap">

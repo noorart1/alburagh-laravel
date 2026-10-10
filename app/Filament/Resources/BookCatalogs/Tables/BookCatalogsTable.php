@@ -171,7 +171,7 @@ class BookCatalogsTable
                     ->toggleable(),
 
                 TextInputColumn::make('quantity')
-                    ->width('90px')
+                    ->width('100px')
                     ->label(app()->getLocale() === 'ar' ? 'الكمية' : 'Quantity')
                     ->type('number')
                     ->rules(['required', 'integer', 'min:0'])
