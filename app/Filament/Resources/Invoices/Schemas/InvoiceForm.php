@@ -6,6 +6,7 @@ use App\Models\BookCatalog;
 use App\Models\Invoice;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\Repeater;
+use Filament\Forms\Components\Repeater\TableColumn;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Infolists\Components\TextEntry;
@@ -23,6 +24,7 @@ class InvoiceForm
         return $schema
             ->components([
                 Section::make($ar ? 'بيانات الفاتورة' : 'Invoice Details')
+                    ->compact()
                     ->schema([
                         TextInput::make('buyer_name')
                             ->label($ar ? 'اسم المشتري' : 'Buyer Name')
@@ -59,13 +61,14 @@ class InvoiceForm
                     ->columnSpanFull(),
 
                 Section::make($ar ? 'الكتب' : 'Books')
+                    ->compact()
                     ->schema([
                         Repeater::make('items')
                             ->hiddenLabel()
                             ->relationship()
                             ->schema([
                                 Select::make('book_catalog_id')
-                                    ->label($ar ? 'الكتاب (بحث بالاسم أو الباركود أو الرقم)' : 'Book (search title, barcode or #)')
+                                    ->placeholder($ar ? 'بحث بالاسم أو الباركود أو الرقم' : 'Search title, barcode or #')
                                     ->searchable()
                                     ->getSearchResultsUsing(fn (string $search): array => BookCatalog::query()
                                         ->where(fn ($query) => $query
@@ -84,8 +87,7 @@ class InvoiceForm
                                         $set('barcode', $book?->barcode);
                                         $set('title', $book?->title);
                                         $set('unit_price', $book?->{Invoice::PRICE_COLUMNS[$get('../../currency')] ?? 'price_iqd'});
-                                    })
-                                    ->columnSpan(3),
+                                    }),
 
                                 TextInput::make('barcode')
                                     ->label($ar ? 'باركود' : 'Barcode')
@@ -94,8 +96,7 @@ class InvoiceForm
                                 TextInput::make('title')
                                     ->label($ar ? 'اسم الكتاب' : 'Book Title')
                                     ->readOnly()
-                                    ->required()
-                                    ->columnSpan(2),
+                                    ->required(),
 
                                 TextInput::make('unit_price')
                                     ->label($ar ? 'السعر' : 'Price')
@@ -117,7 +118,14 @@ class InvoiceForm
                                     ->label($ar ? 'المجموع' : 'Total')
                                     ->state(fn (Get $get): string => number_format((float) $get('unit_price') * (int) $get('quantity'), 2)),
                             ])
-                            ->columns(6)
+                            ->table([
+                                TableColumn::make($ar ? 'الكتاب' : 'Book')->width('30%'),
+                                TableColumn::make($ar ? 'باركود' : 'Barcode')->width('14%'),
+                                TableColumn::make($ar ? 'اسم الكتاب' : 'Title'),
+                                TableColumn::make($ar ? 'السعر' : 'Price')->width('10%'),
+                                TableColumn::make($ar ? 'الكمية' : 'Qty')->width('8%'),
+                                TableColumn::make($ar ? 'المجموع' : 'Total')->width('10%'),
+                            ])
                             ->addActionLabel($ar ? 'إضافة كتاب' : 'Add book')
                             ->defaultItems(1),
 

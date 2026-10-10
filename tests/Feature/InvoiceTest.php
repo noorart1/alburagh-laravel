@@ -55,7 +55,7 @@ class InvoiceTest extends TestCase
 
         $book = BookCatalog::create([
             'catalog_number' => 1, 'title' => 'كتاب', 'barcode' => '9786030000001',
-            'price_iqd' => 5000, 'price_usd' => 4,
+            'price_iqd' => 5000, 'price_usd' => 4, 'cost_iqd' => 3000,
         ]);
 
         // Picking a book fills barcode/title/price from the chosen currency.
@@ -64,6 +64,9 @@ class InvoiceTest extends TestCase
             ->set('data.items', ['a' => ['book_catalog_id' => null, 'quantity' => 3]])
             ->fillForm(['items.a.book_catalog_id' => $book->id])
             ->assertSchemaStateSet(['items.a.unit_price' => 5000, 'items.a.title' => 'كتاب'])
+            ->fillForm(['currency' => 'cost_iqd'])
+            ->assertSchemaStateSet(['items.a.unit_price' => 3000])
+            ->fillForm(['currency' => 'iqd'])
             ->call('create')
             ->assertHasNoFormErrors();
 

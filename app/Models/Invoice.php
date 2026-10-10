@@ -19,6 +19,7 @@ class Invoice extends Model
         'iqd' => 'price_iqd',
         'usd' => 'price_usd',
         'aed' => 'price_aed',
+        'cost_iqd' => 'cost_iqd',
     ];
 
     /** @return array<string, string> */
@@ -30,6 +31,7 @@ class Invoice extends Model
             'iqd' => $ar ? 'دينار' : 'IQD',
             'usd' => $ar ? 'دولار' : 'USD',
             'aed' => $ar ? 'درهم' : 'AED',
+            'cost_iqd' => $ar ? 'الكلفة دينار' : 'Cost IQD',
         ];
     }
 
