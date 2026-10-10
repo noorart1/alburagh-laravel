@@ -16,6 +16,8 @@ use Filament\Tables\Table;
 use PhpOffice\PhpSpreadsheet\Cell\DataType;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
+use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Support\Str;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class InvoiceResource extends Resource
@@ -65,35 +67,59 @@ class InvoiceResource extends Resource
         ];
     }
 
-    public static function downloadExcel(Invoice $invoice): StreamedResponse
+    /**
+     * One invoice, or several of one buyer combined into a single sheet
+     * (same book at the same price becomes one line with summed quantity).
+     *
+     * @param  Invoice|Collection<int, Invoice>  $invoices
+     */
+    public static function downloadExcel(Invoice|Collection $invoices): StreamedResponse
     {
-        $invoice->loadMissing('items');
+        $invoices = Collection::wrap($invoices)->sortBy([['date', 'asc'], ['id', 'asc']])->values();
+        $invoices->load('items');
+        $first = $invoices->first();
+        $last = $invoices->last();
+        $combined = $invoices->count() > 1;
+
+        $items = $invoices->flatMap->items
+            ->groupBy(fn ($item) => $item->barcode.'|'.$item->title.'|'.$item->unit_price)
+            ->map(fn ($group) => [
+                'barcode' => $group->first()->barcode,
+                'title' => $group->first()->title,
+                'unit_price' => (float) $group->first()->unit_price,
+                'quantity' => $group->sum('quantity'),
+            ]);
 
         $spreadsheet = new Spreadsheet();
         $sheet = $spreadsheet->getActiveSheet();
         $sheet->setTitle('فاتورة');
         $sheet->setRightToLeft(true);
 
+        $dates = $first->date->format('Y-m-d');
+        if (! $first->date->equalTo($last->date)) {
+            $dates .= ' - '.$last->date->format('Y-m-d');
+        }
+
         $sheet->fromArray([
-            ['فاتورة - دار البراق لثقافة الأطفال'],
-            ['اسم المشتري', $invoice->buyer_name],
-            ['التاريخ', $invoice->date->format('Y-m-d')],
-            ['العملة', Invoice::currencyOptions()[$invoice->currency] ?? $invoice->currency],
-            [],
+            [($combined ? 'فاتورة مجمّعة' : 'فاتورة').' - دار البراق لثقافة الأطفال'],
+            ['اسم المشتري', $first->buyer_name],
+            ['التاريخ', $dates],
+            ['العملة', Invoice::currencyOptions()[$first->currency] ?? $first->currency],
+            [$combined ? 'أرقام الفواتير' : 'رقم الفاتورة', $invoices->pluck('id')->implode('، ')],
             ['باركود', 'اسم الكتاب', 'السعر', 'الكمية', 'المجموع'],
         ]);
         $sheet->mergeCells('A1:E1');
         $sheet->getStyle('A1')->getFont()->setBold(true)->setSize(14);
-        $sheet->getStyle('A2:A4')->getFont()->setBold(true);
+        $sheet->getStyle('A2:A5')->getFont()->setBold(true);
         $sheet->getStyle('A6:E6')->getFont()->setBold(true);
 
         $row = 7;
-        foreach ($invoice->items as $item) {
+        foreach ($items as $item) {
             // Explicit string so long barcodes don't turn into 9.78E+12.
-            $sheet->setCellValueExplicit("A{$row}", (string) $item->barcode, DataType::TYPE_STRING);
-            $sheet->setCellValue("B{$row}", $item->title);
-            $sheet->setCellValue("C{$row}", (float) $item->unit_price);
-            $sheet->setCellValue("D{$row}", (int) $item->quantity);
+            $sheet->setCellValueExplicit("A{$row}", (string) $item['barcode'], DataType::TYPE_STRING);
+            $sheet->setCellValue("B{$row}", $item['title']);
+            $sheet->setCellValue("C{$row}", $item['unit_price']);
+            $sheet->setCellValue("D{$row}", (int) $item['quantity']);
             $sheet->setCellValue("E{$row}", "=C{$row}*D{$row}");
             $row++;
         }
@@ -102,7 +128,7 @@ class InvoiceResource extends Resource
         $sheet->setCellValue("E{$row}", $row > 7 ? '=SUM(E7:E'.($row - 1).')' : 0);
         $sheet->getStyle("D{$row}:E{$row}")->getFont()->setBold(true);
         // Dinar amounts are whole numbers; USD/AED keep cents.
-        $format = in_array($invoice->currency, ['usd', 'aed'], true) ? '#,##0.00' : '#,##0';
+        $format = in_array($first->currency, ['usd', 'aed'], true) ? '#,##0.00' : '#,##0';
         $sheet->getStyle("C7:C{$row}")->getNumberFormat()->setFormatCode($format);
         $sheet->getStyle("E7:E{$row}")->getNumberFormat()->setFormatCode($format);
 
@@ -110,7 +136,9 @@ class InvoiceResource extends Resource
             $sheet->getColumnDimension($column)->setWidth($width);
         }
 
-        $filename = 'invoice-'.$invoice->id.'-'.$invoice->date->format('Y-m-d').'.xlsx';
+        $filename = $combined
+            ? 'invoices-'.Str::slug($first->buyer_name, '-', null).'-'.$last->date->format('Y-m-d').'.xlsx'
+            : 'invoice-'.$first->id.'-'.$first->date->format('Y-m-d').'.xlsx';
 
         return response()->streamDownload(
             fn () => (new Xlsx($spreadsheet))->save('php://output'),

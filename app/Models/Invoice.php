@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Facades\DB;
@@ -46,6 +47,34 @@ class Invoice extends Model
     public function items(): HasMany
     {
         return $this->hasMany(InvoiceItem::class);
+    }
+
+    /**
+     * Moves every line into the oldest invoice and deletes the rest.
+     * Caller guarantees same buyer and currency.
+     *
+     * @param  Collection<int, Invoice>  $invoices
+     */
+    public static function merge(Collection $invoices): self
+    {
+        $target = $invoices->sortBy([['date', 'asc'], ['id', 'asc']])->first();
+        $others = $invoices->pluck('id')->reject(fn ($id) => $id === $target->id);
+
+        DB::transaction(function () use ($target, $others): void {
+            InvoiceItem::whereIn('invoice_id', $others)->update(['invoice_id' => $target->id]);
+            static::whereIn('id', $others)->delete();
+            $target->recalculateTotal();
+        });
+
+        return $target->refresh();
+    }
+
+    /** @param  Collection<int, Invoice>  $invoices */
+    public static function sameBuyerAndCurrency(Collection $invoices): bool
+    {
+        return $invoices->isNotEmpty()
+            && $invoices->map(fn (Invoice $invoice) => trim($invoice->buyer_name))->unique()->count() === 1
+            && $invoices->pluck('currency')->unique()->count() === 1;
     }
 
     public function recalculateTotal(): void

@@ -15,6 +15,8 @@ use Filament\Actions\Testing\TestAction;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Livewire\Livewire;
 use PhpOffice\PhpSpreadsheet\IOFactory;
+use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 use Tests\TestCase;
 
 class InvoiceTest extends TestCase
@@ -76,6 +78,21 @@ class InvoiceTest extends TestCase
         $second = Invoice::create(['buyer_name' => 'علي', 'date' => now(), 'currency' => 'iqd']);
         $second->items()->create(['title' => 'آخر', 'unit_price' => 1000, 'quantity' => 2]);
 
+        // Combined export without merging: both invoices stay, one sheet, totals add up.
+        $second->items()->create(['barcode' => '9786030000001', 'title' => 'كتاب', 'unit_price' => 5000, 'quantity' => 1]);
+        $combined = InvoiceResource::downloadExcel(Invoice::all());
+        $sheet = $this->sheetFrom($combined);
+        $this->assertSame('9786030000001', $sheet->getCell('A7')->getValue());
+        $this->assertEquals(4, $sheet->getCell('D7')->getValue()); // 3 + 1 of the same book merged into one line
+        $this->assertEquals(22000, $sheet->getCell('E9')->getCalculatedValue());
+        $this->assertSame(2, Invoice::count());
+        $second->items()->where('title', 'كتاب')->delete();
+
+        Livewire::test(ListInvoices::class)
+            ->callAction('buyerCombined', ['buyer_name' => 'علي', 'currency' => 'iqd', 'merge' => false])
+            ->assertHasNoActionErrors();
+        $this->assertSame(2, Invoice::count());
+
         Livewire::test(ListInvoices::class)
             ->selectTableRecords([$first->id, $second->id])
             ->callAction(TestAction::make('merge')->table()->bulk());
@@ -85,14 +102,18 @@ class InvoiceTest extends TestCase
         $this->assertEquals(17000, $merged->total);
         $this->assertCount(2, $merged->items);
 
-        $response = InvoiceResource::downloadExcel($merged);
+        $sheet = $this->sheetFrom(InvoiceResource::downloadExcel($merged));
+        $this->assertSame('9786030000001', $sheet->getCell('A7')->getValue());
+        $this->assertEquals(17000, $sheet->getCell('E9')->getCalculatedValue());
+    }
+
+    private function sheetFrom(StreamedResponse $response): Worksheet
+    {
         ob_start();
         $response->sendContent();
         $path = tempnam(sys_get_temp_dir(), 'inv').'.xlsx';
         file_put_contents($path, ob_get_clean());
 
-        $sheet = IOFactory::load($path)->getActiveSheet();
-        $this->assertSame('9786030000001', $sheet->getCell('A7')->getValue());
-        $this->assertEquals(17000, $sheet->getCell('E9')->getCalculatedValue());
+        return IOFactory::load($path)->getActiveSheet();
     }
 }
