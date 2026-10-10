@@ -11,6 +11,7 @@ use Filament\Forms\Components\Select;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\ListRecords;
 use Filament\Schemas\Components\Utilities\Get;
+use Filament\Schemas\Components\Utilities\Set;
 
 class ListInvoices extends ListRecords
 {
@@ -36,14 +37,16 @@ class ListInvoices extends ListRecords
                         ->options(fn (): array => Invoice::query()->distinct()->orderBy('buyer_name')->pluck('buyer_name', 'buyer_name')->all())
                         ->searchable()
                         ->required()
-                        ->live(),
+                        ->live()
+                        // Preselect the buyer's (most used) currency.
+                        ->afterStateUpdated(fn (?string $state, Set $set) => $set('currency', Invoice::where('buyer_name', $state)
+                            ->groupBy('currency')->orderByRaw('COUNT(*) DESC')->value('currency'))),
 
                     Select::make('currency')
                         ->label($ar ? 'العملة' : 'Currency')
                         ->options(fn (Get $get): array => collect(Invoice::currencyOptions())
                             ->only(Invoice::where('buyer_name', $get('buyer_name'))->distinct()->pluck('currency')->all())
                             ->all())
-                        ->default('iqd')
                         ->required(),
 
                     Checkbox::make('merge')
