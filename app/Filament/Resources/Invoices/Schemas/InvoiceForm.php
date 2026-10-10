@@ -10,6 +10,7 @@ use Filament\Forms\Components\Repeater\TableColumn;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Infolists\Components\TextEntry;
+use Filament\Schemas\Components\Grid;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Components\Utilities\Set;
@@ -23,9 +24,12 @@ class InvoiceForm
 
         return $schema
             ->components([
-                Section::make($ar ? 'بيانات الفاتورة' : 'Invoice Details')
+                // One headerless card: details row, item rows, total — no section titles.
+                Section::make()
                     ->compact()
+                    ->extraAttributes(['class' => 'invoice-form'])
                     ->schema([
+                      Grid::make(3)->schema([
                         TextInput::make('buyer_name')
                             ->label($ar ? 'اسم المشتري' : 'Buyer Name')
                             ->required()
@@ -56,13 +60,8 @@ class InvoiceForm
 
                                 $set('items', $items);
                             }),
-                    ])
-                    ->columns(3)
-                    ->columnSpanFull(),
+                      ]),
 
-                Section::make($ar ? 'الكتب' : 'Books')
-                    ->compact()
-                    ->schema([
                         Repeater::make('items')
                             ->hiddenLabel()
                             ->relationship()
@@ -131,6 +130,7 @@ class InvoiceForm
 
                         TextEntry::make('grand_total')
                             ->label($ar ? 'الإجمالي' : 'Grand Total')
+                            ->inlineLabel()
                             ->weight('bold')
                             ->state(fn (Get $get): string => number_format(
                                 collect($get('items') ?? [])->sum(fn (array $item) => (float) ($item['unit_price'] ?? 0) * (int) ($item['quantity'] ?? 0)),

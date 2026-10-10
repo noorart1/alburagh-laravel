@@ -1329,3 +1329,48 @@ html.dark .fi-no-notification[class*="warning"] {
 })();
 </script>
 @endif
+
+@if (request()->is('admin/invoices*'))
+<style>
+/* Invoice create/edit: dense layout */
+body:has(.invoice-form) .fi-header-heading {
+    font-size: 1.25rem !important;
+}
+
+body:has(.invoice-form) .fi-page-header-main-ctn,
+body:has(.invoice-form) .fi-page-main {
+    row-gap: 10px !important;
+    padding-block: 8px !important;
+}
+
+.invoice-form .fi-sc {
+    row-gap: 8px !important;
+}
+
+.invoice-form .fi-fo-table-repeater th,
+.invoice-form .fi-fo-table-repeater td {
+    padding: 3px 5px !important;
+    font-size: 0.8125rem !important;
+}
+
+.invoice-form .fi-input-wrp,
+.invoice-form .fi-input-wrp input {
+    min-height: 30px !important;
+}
+
+.invoice-form .fi-input-wrp input {
+    padding-block: 2px !important;
+    font-size: 0.8125rem !important;
+}
+
+.invoice-form .fi-fo-table-repeater-add .fi-btn {
+    min-height: 28px !important;
+    padding-block: 3px !important;
+    font-size: 0.8125rem !important;
+}
+
+.invoice-form .fi-fo-field-wrp-label {
+    margin-bottom: 1px !important;
+}
+</style>
+@endif
