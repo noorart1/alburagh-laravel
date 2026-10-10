@@ -106,33 +106,34 @@ class InvoiceResource extends Resource
             ['التاريخ', $dates],
             ['العملة', Invoice::currencyOptions()[$first->currency] ?? $first->currency],
             [$combined ? 'أرقام الفواتير' : 'رقم الفاتورة', $invoices->pluck('id')->implode('، ')],
-            ['باركود', 'اسم الكتاب', 'السعر', 'الكمية', 'المجموع'],
+            ['ت', 'باركود', 'اسم الكتاب', 'السعر', 'الكمية', 'المجموع'],
         ]);
-        $sheet->mergeCells('A1:E1');
+        $sheet->mergeCells('A1:F1');
         $sheet->getStyle('A1')->getFont()->setBold(true)->setSize(14);
         $sheet->getStyle('A2:A5')->getFont()->setBold(true);
-        $sheet->getStyle('A6:E6')->getFont()->setBold(true);
+        $sheet->getStyle('A6:F6')->getFont()->setBold(true);
 
         $row = 7;
         foreach ($items as $item) {
             // Explicit string so long barcodes don't turn into 9.78E+12.
-            $sheet->setCellValueExplicit("A{$row}", (string) $item['barcode'], DataType::TYPE_STRING);
-            $sheet->setCellValue("B{$row}", $item['title']);
-            $sheet->setCellValue("C{$row}", $item['unit_price']);
-            $sheet->setCellValue("D{$row}", (int) $item['quantity']);
-            $sheet->setCellValue("E{$row}", "=C{$row}*D{$row}");
+            $sheet->setCellValue("A{$row}", $row - 6); // row number 1, 2, 3…
+            $sheet->setCellValueExplicit("B{$row}", (string) $item['barcode'], DataType::TYPE_STRING);
+            $sheet->setCellValue("C{$row}", $item['title']);
+            $sheet->setCellValue("D{$row}", $item['unit_price']);
+            $sheet->setCellValue("E{$row}", (int) $item['quantity']);
+            $sheet->setCellValue("F{$row}", "=D{$row}*E{$row}");
             $row++;
         }
 
-        $sheet->setCellValue("D{$row}", 'الإجمالي');
-        $sheet->setCellValue("E{$row}", $row > 7 ? '=SUM(E7:E'.($row - 1).')' : 0);
-        $sheet->getStyle("D{$row}:E{$row}")->getFont()->setBold(true);
+        $sheet->setCellValue("E{$row}", 'الإجمالي');
+        $sheet->setCellValue("F{$row}", $row > 7 ? '=SUM(F7:F'.($row - 1).')' : 0);
+        $sheet->getStyle("E{$row}:F{$row}")->getFont()->setBold(true);
         // Dinar amounts are whole numbers; USD/AED keep cents.
         $format = in_array($first->currency, ['usd', 'aed'], true) ? '#,##0.00' : '#,##0';
-        $sheet->getStyle("C7:C{$row}")->getNumberFormat()->setFormatCode($format);
-        $sheet->getStyle("E7:E{$row}")->getNumberFormat()->setFormatCode($format);
+        $sheet->getStyle("D7:D{$row}")->getNumberFormat()->setFormatCode($format);
+        $sheet->getStyle("F7:F{$row}")->getNumberFormat()->setFormatCode($format);
 
-        foreach (['A' => 18, 'B' => 45, 'C' => 12, 'D' => 10, 'E' => 14] as $column => $width) {
+        foreach (['A' => 5, 'B' => 18, 'C' => 45, 'D' => 12, 'E' => 10, 'F' => 14] as $column => $width) {
             $sheet->getColumnDimension($column)->setWidth($width);
         }
 

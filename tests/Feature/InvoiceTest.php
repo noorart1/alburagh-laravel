@@ -82,9 +82,9 @@ class InvoiceTest extends TestCase
         $second->items()->create(['barcode' => '9786030000001', 'title' => 'كتاب', 'unit_price' => 5000, 'quantity' => 1]);
         $combined = InvoiceResource::downloadExcel(Invoice::all());
         $sheet = $this->sheetFrom($combined);
-        $this->assertSame('9786030000001', $sheet->getCell('A7')->getValue());
-        $this->assertEquals(4, $sheet->getCell('D7')->getValue()); // 3 + 1 of the same book merged into one line
-        $this->assertEquals(22000, $sheet->getCell('E9')->getCalculatedValue());
+        $this->assertSame('9786030000001', $sheet->getCell('B7')->getValue());
+        $this->assertEquals(4, $sheet->getCell('E7')->getValue()); // 3 + 1 of the same book merged into one line
+        $this->assertEquals(22000, $sheet->getCell('F9')->getCalculatedValue());
         $this->assertSame(2, Invoice::count());
         $second->items()->where('title', 'كتاب')->delete();
 
@@ -103,8 +103,9 @@ class InvoiceTest extends TestCase
         $this->assertCount(2, $merged->items);
 
         $sheet = $this->sheetFrom(InvoiceResource::downloadExcel($merged));
-        $this->assertSame('9786030000001', $sheet->getCell('A7')->getValue());
-        $this->assertEquals(17000, $sheet->getCell('E9')->getCalculatedValue());
+        $this->assertSame('9786030000001', $sheet->getCell('B7')->getValue());
+        $this->assertEquals(17000, $sheet->getCell('F9')->getCalculatedValue());
+        $this->assertEquals([1, 2], [$sheet->getCell('A7')->getValue(), $sheet->getCell('A8')->getValue()]);
     }
 
     private function sheetFrom(StreamedResponse $response): Worksheet
