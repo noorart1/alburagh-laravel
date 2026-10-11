@@ -1205,30 +1205,35 @@ html.dark .fi-no-notification[class*="warning"] {
         rebuildHeader();
     });
 
+    // At most once per frame: discover() forces a layout of the whole (wide)
+    // table, and while Alpine boots the inline inputs the DOM mutates hundreds
+    // of times, so running it per mutation froze the page on load.
+    let mutationQueued = false;
+
     const observer = new MutationObserver(() => {
-        const oldTable = table;
+        if (mutationQueued) return;
 
-        pinHeadingIntoToolbar();
+        mutationQueued = true;
 
-        if (discover()) {
-            if (table !== oldTable) {
-                rebuildHeader();
-            } else {
-                updateVisibility();
+        requestAnimationFrame(() => {
+            mutationQueued = false;
+
+            const oldTable = table;
+
+            observeLayoutTargets();
+            pinHeadingIntoToolbar();
+
+            if (discover()) {
+                if (table !== oldTable) {
+                    rebuildHeader();
+                } else {
+                    updateVisibility();
+                }
             }
-        }
+        });
     });
 
     observer.observe(document.body, {
-        childList: true,
-        subtree: true,
-    });
-
-    const layoutMutationObserver = new MutationObserver(() => {
-        observeLayoutTargets();
-    });
-
-    layoutMutationObserver.observe(document.body, {
         childList: true,
         subtree: true,
     });
