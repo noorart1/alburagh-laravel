@@ -68,7 +68,7 @@ class InvoiceTest extends TestCase
             ->fillForm(['buyer_name' => 'علي', 'currency' => 'iqd', 'items' => []])
             ->set('data.items', ['a' => ['book_catalog_id' => null, 'quantity' => 3]])
             ->fillForm(['items.a.book_catalog_id' => $book->id])
-            ->assertSchemaStateSet(['items.a.unit_price' => 5000, 'items.a.title' => 'كتاب'])
+            ->assertSchemaStateSet(['items.a.unit_price' => 5000, 'items.a.barcode' => '9786030000001'])
             ->fillForm(['currency' => 'cost_iqd'])
             ->assertSchemaStateSet(['items.a.unit_price' => 3000])
             ->fillForm(['currency' => 'iqd'])
@@ -77,6 +77,7 @@ class InvoiceTest extends TestCase
 
         $first = Invoice::sole();
         $this->assertEquals(15000, $first->total);
+        $this->assertSame('كتاب', $first->items->sole()->title); // taken from the chosen book
 
         $second = Invoice::create(['buyer_name' => 'علي', 'date' => now(), 'currency' => 'iqd']);
         $second->items()->create(['title' => 'آخر', 'unit_price' => 1000, 'quantity' => 2]);

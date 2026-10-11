@@ -66,8 +66,17 @@ class InvoiceForm
                         Repeater::make('items')
                             ->hiddenLabel()
                             ->relationship()
+                            // Title is taken from the chosen book when the line is saved.
+                            ->mutateRelationshipDataBeforeCreateUsing(fn (array $data): array => static::withBookTitle($data))
+                            ->mutateRelationshipDataBeforeSaveUsing(fn (array $data): array => static::withBookTitle($data))
                             ->schema([
+                                TextInput::make('barcode')
+                                    ->label($ar ? 'باركود' : 'Barcode')
+                                    ->readOnly(),
+
                                 Select::make('book_catalog_id')
+                                    ->label($ar ? 'اسم الكتاب' : 'Book Title')
+                                    ->required()
                                     ->placeholder($ar ? 'بحث بالاسم أو الباركود أو الرقم' : 'Search title, barcode or #')
                                     ->searchable()
                                     ->getSearchResultsUsing(fn (string $search): array => BookCatalog::query()
@@ -79,24 +88,14 @@ class InvoiceForm
                                         ->get()
                                         ->mapWithKeys(fn (BookCatalog $book) => [$book->id => static::bookLabel($book)])
                                         ->all())
-                                    ->getOptionLabelUsing(fn ($value): ?string => ($book = BookCatalog::find($value)) ? static::bookLabel($book) : null)
+                                    ->getOptionLabelUsing(fn ($value): ?string => ($book = BookCatalog::find($value)) ? static::bookLabel($book, full: false) : null)
                                     ->live()
                                     ->afterStateUpdated(function (?string $state, Get $get, Set $set): void {
                                         $book = BookCatalog::find($state);
 
                                         $set('barcode', $book?->barcode);
-                                        $set('title', $book?->title);
                                         $set('unit_price', $book?->{Invoice::PRICE_COLUMNS[$get('../../currency')] ?? 'price_iqd'});
                                     }),
-
-                                TextInput::make('barcode')
-                                    ->label($ar ? 'باركود' : 'Barcode')
-                                    ->readOnly(),
-
-                                TextInput::make('title')
-                                    ->label($ar ? 'اسم الكتاب' : 'Book Title')
-                                    ->readOnly()
-                                    ->required(),
 
                                 TextInput::make('unit_price')
                                     ->label($ar ? 'السعر' : 'Price')
@@ -142,7 +141,6 @@ class InvoiceForm
                                     ->state(fn (Get $get): string => Invoice::formatAmount((float) $get('unit_price') * (int) $get('quantity'))),
                             ])
                             ->table([
-                                TableColumn::make($ar ? 'الكتاب' : 'Book')->width('30%'),
                                 TableColumn::make($ar ? 'باركود' : 'Barcode')->width('14%'),
                                 TableColumn::make($ar ? 'اسم الكتاب' : 'Title'),
                                 TableColumn::make($ar ? 'السعر' : 'Price')->width('10%'),
@@ -164,10 +162,22 @@ class InvoiceForm
             ]);
     }
 
-    protected static function bookLabel(BookCatalog $book): string
+    /** Search results show number and barcode too (searchable by them); a chosen line just its title. */
+    protected static function bookLabel(BookCatalog $book, bool $full = true): string
     {
         $stock = (app()->getLocale() === 'ar' ? 'المخزون: ' : 'Stock: ').$book->quantity;
+        $parts = $full ? [$book->catalog_number, $book->barcode, $book->title] : [$book->title];
 
-        return collect([$book->catalog_number, $book->barcode, $book->title])->filter()->implode(' — ')." ({$stock})";
+        return collect($parts)->filter()->implode(' — ')." ({$stock})";
+    }
+
+    /** @param  array<string, mixed>  $data */
+    protected static function withBookTitle(array $data): array
+    {
+        if ($book = BookCatalog::find($data['book_catalog_id'] ?? null)) {
+            $data['title'] = $book->title;
+        }
+
+        return $data;
     }
 }
