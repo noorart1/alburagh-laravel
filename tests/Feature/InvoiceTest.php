@@ -60,7 +60,7 @@ class InvoiceTest extends TestCase
 
         $book = BookCatalog::create([
             'catalog_number' => 1, 'title' => 'كتاب', 'barcode' => '9786030000001',
-            'price_iqd' => 5000, 'price_usd' => 4, 'cost_iqd' => 3000,
+            'price_iqd' => 5000, 'price_usd' => 4, 'cost_iqd' => 3000, 'quantity' => 10,
         ]);
 
         // Picking a book fills barcode/title/price from the chosen currency.
@@ -166,13 +166,30 @@ class InvoiceTest extends TestCase
 
         $invoice = Invoice::sole();
         [$lineA, $lineB] = $invoice->items->sortBy('id')->values()->all();
+        $lineOf = fn (int $quantity): array => ["record-{$lineA->id}" => ['book_catalog_id' => $book->id, 'barcode' => null, 'title' => 'A', 'unit_price' => 1000, 'quantity' => $quantity]];
+
+        // 7 in stock + 3 already on this invoice = 10 available, so 11 is refused…
         Livewire::test(EditInvoice::class, ['record' => $invoice->getKey()])
-            ->set('data.items', [
-                "record-{$lineA->id}" => ['book_catalog_id' => $book->id, 'barcode' => null, 'title' => 'A', 'unit_price' => 1000, 'quantity' => 12],
-            ]) // A: 3 → 12 (stock goes negative), B removed
+            ->set('data.items', $lineOf(11))
+            ->call('save')
+            ->assertHasFormErrors(["items.record-{$lineA->id}.quantity"]);
+        $this->assertSame([7, 3], [$book->refresh()->quantity, $other->refresh()->quantity]);
+
+        // …and 10 is fine (B removed at the same time).
+        Livewire::test(EditInvoice::class, ['record' => $invoice->getKey()])
+            ->set('data.items', $lineOf(10))
             ->call('save')
             ->assertHasNoFormErrors();
-        $this->assertSame([-2, 5], [$book->refresh()->quantity, $other->refresh()->quantity]);
+        $this->assertSame([0, 5], [$book->refresh()->quantity, $other->refresh()->quantity]);
+
+        // Two lines of the same book count together: B has 5, so 3 + 3 is refused.
+        Livewire::test(CreateInvoice::class)
+            ->fillForm(['buyer_name' => 'علي', 'currency' => 'iqd', 'items' => []])
+            ->set('data.items', ['x' => ['book_catalog_id' => null, 'quantity' => 3], 'y' => ['book_catalog_id' => null, 'quantity' => 3]])
+            ->fillForm(['items.x.book_catalog_id' => $other->id, 'items.y.book_catalog_id' => $other->id])
+            ->call('create')
+            ->assertHasFormErrors(['items.x.quantity', 'items.y.quantity']);
+        $this->assertSame(1, Invoice::count());
 
         $invoice->delete();
         $this->assertSame([10, 5], [$book->refresh()->quantity, $other->refresh()->quantity]);

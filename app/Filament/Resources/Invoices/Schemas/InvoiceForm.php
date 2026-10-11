@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\Invoices\Schemas;
 
 use App\Models\BookCatalog;
+use Closure;
 use App\Models\Invoice;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\Repeater;
@@ -111,6 +112,29 @@ class InvoiceForm
                                     ->minValue(1)
                                     ->default(1)
                                     ->required()
+                                    ->rules([
+                                        fn (Get $get, $livewire): Closure => function (string $attribute, mixed $value, Closure $fail) use ($get, $livewire, $ar): void {
+                                            $book = BookCatalog::find($get('book_catalog_id'));
+
+                                            if (! $book) {
+                                                return;
+                                            }
+
+                                            // Every line of this book in the form, against its stock plus what
+                                            // this invoice already took (when editing, those come back first).
+                                            $wanted = collect($get('../../items'))
+                                                ->where('book_catalog_id', $book->id)
+                                                ->sum(fn (array $item): int => (int) ($item['quantity'] ?? 0));
+                                            $held = ($livewire->record ?? null)?->items()->where('book_catalog_id', $book->id)->sum('quantity') ?? 0;
+                                            $available = $book->quantity + $held;
+
+                                            if ($wanted > $available) {
+                                                $fail($ar
+                                                    ? 'المخزون غير كافٍ. المتوفر: '.max(0, $available)
+                                                    : 'Not enough stock. Available: '.max(0, $available));
+                                            }
+                                        },
+                                    ])
                                     ->live(onBlur: true),
 
                                 TextEntry::make('line_total')
@@ -142,6 +166,8 @@ class InvoiceForm
 
     protected static function bookLabel(BookCatalog $book): string
     {
-        return collect([$book->catalog_number, $book->barcode, $book->title])->filter()->implode(' — ');
+        $stock = (app()->getLocale() === 'ar' ? 'المخزون: ' : 'Stock: ').$book->quantity;
+
+        return collect([$book->catalog_number, $book->barcode, $book->title])->filter()->implode(' — ')." ({$stock})";
     }
 }
