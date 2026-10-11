@@ -9,6 +9,7 @@ use App\Filament\Resources\Invoices\Schemas\InvoiceForm;
 use App\Filament\Resources\Invoices\Tables\InvoicesTable;
 use App\Models\Invoice;
 use BackedEnum;
+use Filament\Notifications\Notification;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
@@ -22,6 +23,7 @@ use PhpOffice\PhpSpreadsheet\Worksheet\PageSetup;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Str;
+use Illuminate\Validation\ValidationException;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class InvoiceResource extends Resource
@@ -77,6 +79,16 @@ class InvoiceResource extends Resource
      *
      * @param  Invoice|Collection<int, Invoice>  $invoices
      */
+    /** The error under a table cell is easy to miss, so also say it in a popup. */
+    public static function notifyNotSaved(ValidationException $exception): void
+    {
+        Notification::make()
+            ->title(app()->getLocale() === 'ar' ? 'لم يتم حفظ الفاتورة' : 'Invoice not saved')
+            ->body(collect($exception->errors())->flatten()->first())
+            ->danger()
+            ->send();
+    }
+
     public static function downloadExcel(Invoice|Collection $invoices): StreamedResponse
     {
         $invoices = Collection::wrap($invoices)->sortBy([['date', 'asc'], ['id', 'asc']])->values();
