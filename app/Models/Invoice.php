@@ -44,6 +44,12 @@ class Invoice extends Model
         return number_format($amount, fmod($amount, 1) == 0.0 ? 0 : 2);
     }
 
+    protected static function booted(): void
+    {
+        // Through the model (not the DB cascade) so each line returns its stock.
+        static::deleting(fn (self $invoice) => $invoice->items()->get()->each->delete());
+    }
+
     public function items(): HasMany
     {
         return $this->hasMany(InvoiceItem::class);

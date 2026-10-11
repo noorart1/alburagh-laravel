@@ -115,10 +115,10 @@ class BookCatalogInfolist
                     ])
                     ->columns(3),
 
-                Section::make(app()->getLocale() === 'ar' ? 'الكمية والكلفة' : 'Quantity & Cost')
+                Section::make(app()->getLocale() === 'ar' ? 'المخزون والكلفة' : 'Stock & Cost')
                     ->schema([
                         TextEntry::make('quantity')
-                            ->label(app()->getLocale() === 'ar' ? 'الكمية' : 'Quantity'),
+                            ->label(app()->getLocale() === 'ar' ? 'المخزون' : 'Stock'),
 
                         TextEntry::make('cost_iqd')
                             ->label(app()->getLocale() === 'ar' ? 'الكلفة بالدينار' : 'Cost IQD')

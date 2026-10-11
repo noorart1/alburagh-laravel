@@ -43,20 +43,6 @@ class BookCatalogForm
                                                     : 'Unique number, freely editable.'
                                             ),
 
-                                        TextInput::make('temporary_catalog_number')
-                                            ->label(app()->getLocale() === 'ar' ? 'رقم مؤقت للعرض' : 'Temporary Display #')
-                                            ->maxLength(20)
-                                            ->extraInputAttributes([
-                                                'dir' => 'ltr',
-                                                'style' => 'text-align:left;',
-                                            ])
-                                            ->placeholder('1010+')
-                                            ->helperText(
-                                                app()->getLocale() === 'ar'
-                                                    ? 'اختياري. مثال: 1010+ ليظهر مباشرة بعد 1010 في الجدول.'
-                                                    : 'Optional. Example: 1010+ to display directly after 1010 in the table.'
-                                            ),
-
                                         Select::make('category')
                                             ->label(app()->getLocale() === 'ar' ? 'الصنف' : 'Category')
                                             ->options(BookCatalog::categoryOptions())
@@ -100,7 +86,7 @@ class BookCatalogForm
                                             ->maxLength(100),
 
                                         TextInput::make('quantity')
-                                            ->label(app()->getLocale() === 'ar' ? 'الكمية' : 'Quantity')
+                                            ->label(app()->getLocale() === 'ar' ? 'المخزون' : 'Stock')
                                             ->numeric()
                                             ->integer()
                                             ->minValue(0)

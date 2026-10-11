@@ -7,6 +7,7 @@ use App\Filament\Resources\BookCatalogs\Pages\ListBookCatalogs;
 use App\Filament\Resources\BookCatalogs\Pages\ViewBookCatalog;
 use App\Filament\Resources\Invoices\InvoiceResource;
 use App\Filament\Resources\Invoices\Pages\CreateInvoice;
+use App\Filament\Resources\Invoices\Pages\EditInvoice;
 use App\Filament\Resources\Invoices\Pages\ListInvoices;
 use App\Models\BookCatalog;
 use App\Models\Invoice;
@@ -15,6 +16,8 @@ use Filament\Actions\Testing\TestAction;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Livewire\Livewire;
 use PhpOffice\PhpSpreadsheet\IOFactory;
+use PhpOffice\PhpSpreadsheet\Spreadsheet;
+use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 use Tests\TestCase;
@@ -116,5 +119,62 @@ class InvoiceTest extends TestCase
         file_put_contents($path, ob_get_clean());
 
         return IOFactory::load($path)->getActiveSheet();
+    }
+
+    public function test_excel_import_matches_by_barcode(): void
+    {
+        $a = BookCatalog::create(['catalog_number' => 1, 'barcode' => '9789642504435', 'title' => 'A']);
+        $b = BookCatalog::create(['catalog_number' => 2, 'barcode' => '111', 'title' => 'B']);
+        BookCatalog::create(['catalog_number' => 3, 'barcode' => '222', 'title' => 'C1']);
+        BookCatalog::create(['catalog_number' => 4, 'barcode' => '222', 'title' => 'C2']);
+
+        $sheet = (new Spreadsheet())->getActiveSheet();
+        $sheet->fromArray([
+            ['brand'],
+            ['Barcode', 'الرقم', 'Book Title'],
+            [9789642504435, 10, 'A new'],  // numeric barcode, number changed
+            ['111', 3, 'B new'],           // number 3 is taken by C1 → kept
+            ['222', null, 'ambiguous'],    // barcode on two books → skipped
+            ['999', null, 'missing'],
+            ['111', null, 'dup'],          // repeated barcode → skipped
+        ]);
+        $path = tempnam(sys_get_temp_dir(), 'imp').'.xlsx';
+        (new Xlsx($sheet->getParent()))->save($path);
+
+        $sync = new \ReflectionMethod(ListBookCatalogs::class, 'syncBookCatalogsFromExcel');
+        $result = $sync->invoke(null, $path);
+
+        $this->assertSame(['updated' => 2, 'notFound' => 1, 'duplicates' => 1, 'ambiguous' => 1, 'numberTaken' => 1, 'noBarcode' => false], $result);
+        $this->assertSame([10, 'A new'], [$a->refresh()->catalog_number, $a->title]);
+        $this->assertSame([2, 'B new'], [$b->refresh()->catalog_number, $b->title]);
+        $this->assertSame(0, BookCatalog::where('title', 'ambiguous')->count());
+    }
+
+    public function test_invoice_lines_move_book_stock(): void
+    {
+        $this->actingAs(User::factory()->create(['is_admin' => true, 'is_active' => true]));
+        $book = BookCatalog::create(['catalog_number' => 1, 'title' => 'A', 'price_iqd' => 1000, 'quantity' => 10]);
+        $other = BookCatalog::create(['catalog_number' => 2, 'title' => 'B', 'price_iqd' => 1000, 'quantity' => 5]);
+
+        Livewire::test(CreateInvoice::class)
+            ->fillForm(['buyer_name' => 'علي', 'currency' => 'iqd', 'items' => []])
+            ->set('data.items', ['a' => ['book_catalog_id' => null, 'quantity' => 3], 'b' => ['book_catalog_id' => null, 'quantity' => 2]])
+            ->fillForm(['items.a.book_catalog_id' => $book->id, 'items.b.book_catalog_id' => $other->id])
+            ->call('create')
+            ->assertHasNoFormErrors();
+        $this->assertSame([7, 3], [$book->refresh()->quantity, $other->refresh()->quantity]);
+
+        $invoice = Invoice::sole();
+        [$lineA, $lineB] = $invoice->items->sortBy('id')->values()->all();
+        Livewire::test(EditInvoice::class, ['record' => $invoice->getKey()])
+            ->set('data.items', [
+                "record-{$lineA->id}" => ['book_catalog_id' => $book->id, 'barcode' => null, 'title' => 'A', 'unit_price' => 1000, 'quantity' => 12],
+            ]) // A: 3 → 12 (stock goes negative), B removed
+            ->call('save')
+            ->assertHasNoFormErrors();
+        $this->assertSame([-2, 5], [$book->refresh()->quantity, $other->refresh()->quantity]);
+
+        $invoice->delete();
+        $this->assertSame([10, 5], [$book->refresh()->quantity, $other->refresh()->quantity]);
     }
 }

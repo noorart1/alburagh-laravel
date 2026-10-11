@@ -103,8 +103,8 @@ class ListBookCatalogs extends ListRecords
                     FileUpload::make('file')
                         ->label(app()->getLocale() === 'ar' ? 'ملف Excel المعدّل' : 'Edited Excel file')
                         ->helperText(app()->getLocale() === 'ar'
-                            ? 'ملف مصدَّر من هذه الصفحة، بعد إجراء التعديلات عليه. المطابقة تتم عبر عمود "الرقم".'
-                            : 'A file exported from this page, after you\'ve edited it. Rows are matched by the catalog number column.')
+                            ? 'ملف مصدَّر من هذه الصفحة، بعد إجراء التعديلات عليه. المطابقة تتم عبر عمود "باركد الكتاب".'
+                            : 'A file exported from this page, after you\'ve edited it. Rows are matched by the barcode column.')
                         ->acceptedFileTypes(['application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'])
                         ->rules(['mimes:xlsx'])
                         ->storeFiles(false)
@@ -115,16 +115,16 @@ class ListBookCatalogs extends ListRecords
 
                     $result = $file instanceof TemporaryUploadedFile
                         ? static::syncBookCatalogsFromExcel($file->getRealPath())
-                        : ['updated' => 0, 'notFound' => 0, 'duplicates' => 0, 'noCatalogNumber' => true];
+                        : ['updated' => 0, 'notFound' => 0, 'duplicates' => 0, 'ambiguous' => 0, 'numberTaken' => 0, 'noBarcode' => true];
 
                     $ar = app()->getLocale() === 'ar';
 
-                    if ($result['noCatalogNumber']) {
+                    if ($result['noBarcode']) {
                         Notification::make()
                             ->title($ar ? 'تعذر الاستيراد' : 'Import failed')
                             ->body($ar
-                                ? 'لم يتم العثور على عمود "الرقم" في الملف، وهو مطلوب لمطابقة السجلات.'
-                                : 'No catalog number column was found in the file, which is required to match records.')
+                                ? 'لم يتم العثور على عمود "باركد الكتاب" في الملف، وهو مطلوب لمطابقة السجلات.'
+                                : 'No barcode column was found in the file, which is required to match records.')
                             ->danger()
                             ->send();
 
@@ -132,13 +132,25 @@ class ListBookCatalogs extends ListRecords
                     }
 
                     $body = $ar
-                        ? "تم تحديث {$result['updated']} سجل. لم يتم العثور على {$result['notFound']} رقم كتالوج."
-                        : "{$result['updated']} records updated. {$result['notFound']} catalog numbers were not found.";
+                        ? "تم تحديث {$result['updated']} سجل. لم يتم العثور على {$result['notFound']} باركد."
+                        : "{$result['updated']} records updated. {$result['notFound']} barcodes were not found.";
 
                     if ($result['duplicates'] > 0) {
                         $body .= $ar
-                            ? " تم تجاهل {$result['duplicates']} صف مكرر لنفس الرقم (تم اعتماد أول صف فقط)."
-                            : " {$result['duplicates']} rows had a repeated catalog number and were skipped (only the first was applied).";
+                            ? " تم تجاهل {$result['duplicates']} صف مكرر لنفس الباركد (تم اعتماد أول صف فقط)."
+                            : " {$result['duplicates']} rows had a repeated barcode and were skipped (only the first was applied).";
+                    }
+
+                    if ($result['ambiguous'] > 0) {
+                        $body .= $ar
+                            ? " تم تجاهل {$result['ambiguous']} باركد لأنه مسجل لأكثر من كتاب."
+                            : " {$result['ambiguous']} barcodes belong to more than one book and were skipped.";
+                    }
+
+                    if ($result['numberTaken'] > 0) {
+                        $body .= $ar
+                            ? " لم يتم تغيير \"الرقم\" في {$result['numberTaken']} سجل لأنه مستخدم لكتاب آخر."
+                            : " {$result['numberTaken']} catalog numbers were left unchanged because another book already uses them.";
                     }
 
                     Notification::make()
@@ -153,13 +165,13 @@ class ListBookCatalogs extends ListRecords
     /**
      * Reads back a file previously produced by BookCatalogExporter (brand
      * row, then a header row, then data) and updates matching records by
-     * catalog number. Column set/order follows whatever the export's header
+     * barcode. Column set/order follows whatever the export's header
      * row says, so it still works after column mapping or reordering.
      *
      * ponytail: single-threaded row-by-row save, fine at this table's size
      * (thousands, not millions); batch-upsert if that ever changes.
      *
-     * @return array{updated: int, notFound: int, duplicates: int, noCatalogNumber: bool}
+     * @return array{updated: int, notFound: int, duplicates: int, ambiguous: int, numberTaken: int, noBarcode: bool}
      */
     protected static function syncBookCatalogsFromExcel(string $path): array
     {
@@ -173,11 +185,13 @@ class ListBookCatalogs extends ListRecords
         $reader->open($path);
 
         $headerMap = [];
-        $catalogNumberColumn = null;
+        $barcodeColumn = null;
         $updated = 0;
         $notFound = 0;
         $duplicates = 0;
-        $seenCatalogNumbers = [];
+        $ambiguous = 0;
+        $numberTaken = 0;
+        $seenBarcodes = [];
         $rowNumber = 0;
 
         foreach ($reader->getSheetIterator() as $sheet) {
@@ -195,8 +209,8 @@ class ListBookCatalogs extends ListRecords
                         if ($field = $fieldsByLabel->get(trim((string) $label))) {
                             $headerMap[$index] = $field;
 
-                            if ($field === 'catalog_number') {
-                                $catalogNumberColumn = $index;
+                            if ($field === 'barcode') {
+                                $barcodeColumn = $index;
                             }
                         }
                     }
@@ -204,42 +218,48 @@ class ListBookCatalogs extends ListRecords
                     continue;
                 }
 
-                if ($catalogNumberColumn === null) {
+                if ($barcodeColumn === null) {
                     break 2;
                 }
 
-                $catalogNumber = trim((string) ($cells[$catalogNumberColumn] ?? ''));
+                $barcode = static::normalizeBarcode($cells[$barcodeColumn] ?? null);
 
-                if ($catalogNumber === '') {
+                if ($barcode === '') {
                     continue;
                 }
 
-                $catalogNumber = (int) $catalogNumber;
-
-                if (isset($seenCatalogNumbers[$catalogNumber])) {
-                    // Same catalog number twice in the file: first occurrence
-                    // wins, this one is reported instead of silently
-                    // overwriting it (catalog_number is unique in the DB,
-                    // so both rows would otherwise target the same record).
+                if (isset($seenBarcodes[$barcode])) {
+                    // Same barcode twice in the file: first occurrence wins,
+                    // this one is reported instead of silently overwriting it.
                     $duplicates++;
 
                     continue;
                 }
 
-                $seenCatalogNumbers[$catalogNumber] = true;
+                $seenBarcodes[$barcode] = true;
 
-                $record = BookCatalog::where('catalog_number', $catalogNumber)->first();
+                $matches = BookCatalog::where('barcode', $barcode)->limit(2)->get();
 
-                if (! $record) {
+                if ($matches->isEmpty()) {
                     $notFound++;
 
                     continue;
                 }
 
+                if ($matches->count() > 1) {
+                    // barcode isn't unique in the DB; guessing which book is
+                    // meant could overwrite the wrong one, so skip and report.
+                    $ambiguous++;
+
+                    continue;
+                }
+
+                $record = $matches->first();
+
                 $values = [];
 
                 foreach ($headerMap as $index => $field) {
-                    if ($field === 'catalog_number') {
+                    if ($field === 'barcode') {
                         continue; // matching key, not editable via import
                     }
 
@@ -262,6 +282,21 @@ class ListBookCatalogs extends ListRecords
                     $values[$field] = $value;
                 }
 
+                if (array_key_exists('catalog_number', $values)) {
+                    $number = $values['catalog_number'];
+
+                    // Required + unique: keep the current one when the cell is
+                    // empty, or when another book already has that number.
+                    if ($number === null || (int) $number === $record->catalog_number) {
+                        unset($values['catalog_number']);
+                    } elseif (BookCatalog::where('catalog_number', (int) $number)->exists()) {
+                        unset($values['catalog_number']);
+                        $numberTaken++;
+                    } else {
+                        $values['catalog_number'] = (int) $number;
+                    }
+                }
+
                 $record->fill($values)->save();
                 $updated++;
             }
@@ -275,7 +310,19 @@ class ListBookCatalogs extends ListRecords
             'updated' => $updated,
             'notFound' => $notFound,
             'duplicates' => $duplicates,
-            'noCatalogNumber' => $catalogNumberColumn === null,
+            'ambiguous' => $ambiguous,
+            'numberTaken' => $numberTaken,
+            'noBarcode' => $barcodeColumn === null,
         ];
+    }
+
+    /** Excel may hand a barcode back as a number (9789642504435.0); compare as plain digits text. */
+    protected static function normalizeBarcode(mixed $value): string
+    {
+        if (is_float($value)) {
+            return sprintf('%.0f', $value);
+        }
+
+        return trim((string) $value);
     }
 }

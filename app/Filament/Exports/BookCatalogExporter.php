@@ -61,7 +61,6 @@ class BookCatalogExporter extends Exporter
 
         return [
             ExportColumn::make('catalog_number')->label('الرقم'),
-            ExportColumn::make('temporary_catalog_number')->label($ar ? 'رقم مؤقت للعرض' : 'Temporary Display #'),
             ExportColumn::make('barcode')->label($ar ? 'باركد الكتاب' : 'Barcode'),
             ExportColumn::make('series_name')->label($ar ? 'اسم السلسلة' : 'Series Name'),
             ExportColumn::make('title')->label($ar ? 'اسم الكتاب' : 'Book Title'),

@@ -58,7 +58,6 @@ class BookCatalogsTable
 
         return $table
             ->columns([
-                // Temporary display number (e.g. 1010+), when set, shows beside the real one.
                 $input('catalog_number', '84px', 'الرقم', [])
                     ->rules(fn (BookCatalog $record): array => [
                         'required',
@@ -66,7 +65,6 @@ class BookCatalogsTable
                         Rule::unique('book_catalogs', 'catalog_number')->ignore($record->getKey()),
                     ])
                     ->type('number')
-                    ->prefix(fn (BookCatalog $record): ?string => $record->temporary_catalog_number ?: null)
                     ->toggleable(false)
                     ->searchable(),
 
@@ -137,7 +135,7 @@ class BookCatalogsTable
                 $input('price_iqd', '94px', $ar ? 'دينار' : 'IQD', ['nullable', 'numeric', 'min:0'])
                     ->type('number'),
 
-                $input('quantity', '100px', $ar ? 'الكمية' : 'Quantity', ['required', 'integer', 'min:0'])
+                $input('quantity', '100px', $ar ? 'المخزون' : 'Stock', ['required', 'integer', 'min:0'])
                     ->type('number')
                     ->sortable(),
 
@@ -204,26 +202,7 @@ class BookCatalogsTable
                     DeleteBulkAction::make(),
                 ]),
             ])
-            ->modifyQueryUsing(function (Builder $query): Builder {
-                return $query
-                    ->orderByRaw("
-                        CASE
-                            WHEN temporary_catalog_number IS NULL
-                              OR temporary_catalog_number = ''
-                            THEN catalog_number
-                            ELSE CAST(temporary_catalog_number AS UNSIGNED)
-                        END ASC
-                    ")
-                    ->orderByRaw("
-                        CASE
-                            WHEN temporary_catalog_number IS NULL
-                              OR temporary_catalog_number = ''
-                            THEN 0
-                            ELSE 1
-                        END ASC
-                    ")
-                    ->orderBy('catalog_number', 'asc');
-            })
+            ->defaultSort('catalog_number')
             ->modifyQueryUsing(function (Builder $query, $livewire) use ($optionColumns): Builder {
                 // Column manager doubles as the filter UI: whichever ✓ columns
                 // are toggled on narrow the results to matching records (OR

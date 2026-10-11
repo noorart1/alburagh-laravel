@@ -29,10 +29,6 @@ class CreateBookCatalog extends CreateRecord
                 ((int) BookCatalog::query()->max('catalog_number')) + 1
             );
 
-        if (array_key_exists('temporary_catalog_number', $data)) {
-            $record->temporary_catalog_number = $data['temporary_catalog_number'];
-        }
-
         $record->save();
 
         return $record;
