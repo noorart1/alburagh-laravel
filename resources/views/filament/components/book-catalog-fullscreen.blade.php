@@ -447,6 +447,7 @@ html:not(.dark) #book-catalog-sidebar-toggle:hover {
     line-height: 1.8;
 }
 
+@unless ($isBookCatalogIndex) {{-- body:has() re-styles the whole page on every DOM change: ~0.4s on the wide list --}}
 /* =========================================================
    COMPACT EDIT PAGE
    فقط محیط ویرایش Book Catalog
@@ -533,6 +534,7 @@ body:has(form#form) .fi-page-header-actions .fi-btn {
     padding-block: 5px !important;
     padding-inline: 10px !important;
 }
+@endunless
 
 
 @if ($isBookCatalogIndex)
