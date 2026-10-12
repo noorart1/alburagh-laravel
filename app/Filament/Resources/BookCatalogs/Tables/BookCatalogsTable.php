@@ -2,6 +2,8 @@
 
 namespace App\Filament\Resources\BookCatalogs\Tables;
 
+use App\Filament\Tables\Columns\ClickToEditSelectColumn;
+use App\Filament\Tables\Columns\ClickToEditTextColumn;
 use App\Models\BookCatalog;
 use App\Filament\Exports\BookCatalogExporter;
 use Filament\Actions\BulkActionGroup;
@@ -11,9 +13,7 @@ use Filament\Actions\Exports\Enums\ExportFormat;
 use Filament\Actions\EditAction;
 use Filament\Actions\ViewAction;
 use Filament\Tables\Columns\ImageColumn;
-use Filament\Tables\Columns\SelectColumn;
 use Filament\Tables\Columns\TextColumn;
-use Filament\Tables\Columns\TextInputColumn;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
@@ -47,13 +47,11 @@ class BookCatalogsTable
         $optionColumns = static::optionColumns();
         $ar = app()->getLocale() === 'ar';
 
-        // Every data column is edited in place (no need to open the edit page).
-        $input = fn (string $name, string $width, string $label, array $rules): TextInputColumn => TextInputColumn::make($name)
+        // Every data column is edited in place (click a cell; no need to open the edit page).
+        $input = fn (string $name, string $width, string $label, array $rules): ClickToEditTextColumn => ClickToEditTextColumn::make($name)
             ->width($width)
             ->label($label)
             ->rules($rules)
-            // step: decimals like 4.50 in number inputs; title: full value on hover when clipped
-            ->extraInputAttributes(['step' => 'any', 'x-bind:title' => 'state'])
             ->toggleable();
 
         return $table
@@ -86,7 +84,7 @@ class BookCatalogsTable
                 $input('title', '220px', $ar ? 'اسم الكتاب' : 'Book Title', ['required', 'max:255'])
                     ->searchable(),
 
-                SelectColumn::make('category')
+                ClickToEditSelectColumn::make('category')
                     ->width('120px')
                     ->label($ar ? 'الصنف' : 'Category')
                     ->options(BookCatalog::categoryOptions())
@@ -95,7 +93,7 @@ class BookCatalogsTable
                     ->searchable()
                     ->toggleable(),
 
-                SelectColumn::make('publisher')
+                ClickToEditSelectColumn::make('publisher')
                     ->width('170px')
                     ->label($ar ? 'الناشر' : 'Publisher')
                     ->options(BookCatalog::publisherOptions())

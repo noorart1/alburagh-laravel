@@ -35,6 +35,11 @@ class InvoiceTest extends TestCase
 
         Livewire::test(ListBookCatalogs::class)
             ->loadTable()
+            // cells are plain text until clicked, not one Alpine input per cell
+            ->assertSeeHtml('data-edit="text"')
+            ->assertSeeHtml('data-edit="select"')
+            ->assertDontSeeHtml('textInputTableColumn')
+            ->assertDontSeeHtml('selectTableColumn')
             ->call('updateTableColumnState', 'quantity', (string) $book->getKey(), 7)
             ->call('updateTableColumnState', 'title', (string) $book->getKey(), 'عنوان جديد')
             ->call('updateTableColumnState', 'category', (string) $book->getKey(), 'game')
