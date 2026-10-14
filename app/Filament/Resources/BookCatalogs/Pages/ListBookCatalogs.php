@@ -78,7 +78,6 @@ class ListBookCatalogs extends ListRecords
                 'prefs' => $prefs = $this->bookPrefs(),
                 'initial' => $this->fetchBooks($prefs),
                 'editUrl' => BookCatalogResource::getUrl('edit', ['record' => '__ID__']),
-                'viewUrl' => BookCatalogResource::getUrl('view', ['record' => '__ID__']),
             ]),
         ]);
     }

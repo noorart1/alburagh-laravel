@@ -5,9 +5,7 @@ namespace App\Filament\Resources\BookCatalogs;
 use App\Filament\Resources\BookCatalogs\Pages\CreateBookCatalog;
 use App\Filament\Resources\BookCatalogs\Pages\EditBookCatalog;
 use App\Filament\Resources\BookCatalogs\Pages\ListBookCatalogs;
-use App\Filament\Resources\BookCatalogs\Pages\ViewBookCatalog;
 use App\Filament\Resources\BookCatalogs\Schemas\BookCatalogForm;
-use App\Filament\Resources\BookCatalogs\Schemas\BookCatalogInfolist;
 use App\Models\BookCatalog;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
@@ -44,11 +42,6 @@ class BookCatalogResource extends Resource
         return BookCatalogForm::configure($schema);
     }
 
-    public static function infolist(Schema $schema): Schema
-    {
-        return BookCatalogInfolist::configure($schema);
-    }
-
     public static function table(Table $table): Table
     {
         return $table; // the list renders its own table, see ListBookCatalogs::bookColumns()
@@ -59,7 +52,6 @@ class BookCatalogResource extends Resource
         return [
             'index' => ListBookCatalogs::route('/'),
             'create' => CreateBookCatalog::route('/create'),
-            'view' => ViewBookCatalog::route('/{record}'),
             'edit' => EditBookCatalog::route('/{record}/edit'),
         ];
     }

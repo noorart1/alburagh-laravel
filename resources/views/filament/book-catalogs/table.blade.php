@@ -74,7 +74,6 @@ html.dark #bk { --bk-line: #393c42; --bk-head: #34373c; --bk-odd: #24262a; --bk-
 
     const COLS = @js($columns);
     const EDIT_URL = @js($editUrl);
-    const VIEW_URL = @js($viewUrl);
     const state = @js($prefs);
     let rows = [];
     let selected = new Set();
@@ -149,13 +148,13 @@ html.dark #bk { --bk-line: #393c42; --bk-head: #34373c; --bk-odd: #24262a; --bk-
 
     function draw() {
         const fields = shown();
-        table.querySelector('colgroup').innerHTML = '<col style="width:34px">' + fields.map((f) => `<col style="width:${COLS[f].width}px">`).join('') + '<col style="width:110px">';
+        table.querySelector('colgroup').innerHTML = '<col style="width:34px">' + fields.map((f) => `<col style="width:${COLS[f].width}px">`).join('') + '<col style="width:60px">';
         table.querySelector('thead').innerHTML = '<tr><th><input type="checkbox" id="bk-all"></th>'
             + fields.map((f) => `<th${COLS[f].type === 'image' ? '' : ` data-sort="${f}"`} class="${state.sort === f ? 'is-sorted' + (state.dir === 'desc' ? ' is-desc' : '') : ''}" title="${esc(COLS[f].label)}">${esc(COLS[f].label)}</th>`).join('')
             + '<th></th></tr>';
         table.querySelector('tbody').innerHTML = rows.map((r) => `<tr data-id="${r.id}"><td><input type="checkbox"${selected.has(r.id) ? ' checked' : ''}></td>`
             + fields.map((f) => cell(r, f)).join('')
-            + `<td class="a"><a href="${VIEW_URL.replace('__ID__', r.id)}">عرض</a><a href="${EDIT_URL.replace('__ID__', r.id)}">تعديل</a></td></tr>`).join('');
+            + `<td class="a"><a href="${EDIT_URL.replace('__ID__', r.id)}">تعديل</a></td></tr>`).join('');
         $('#bk-all').checked = rows.length > 0 && rows.every((r) => selected.has(r.id));
         syncSelection();
     }

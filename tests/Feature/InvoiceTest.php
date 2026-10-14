@@ -4,7 +4,6 @@ namespace Tests\Feature;
 
 use App\Filament\Resources\BookCatalogs\Pages\EditBookCatalog;
 use App\Filament\Resources\BookCatalogs\Pages\ListBookCatalogs;
-use App\Filament\Resources\BookCatalogs\Pages\ViewBookCatalog;
 use App\Filament\Resources\Invoices\InvoiceResource;
 use App\Filament\Resources\Invoices\Pages\CreateInvoice;
 use App\Filament\Resources\Invoices\Pages\EditInvoice;
@@ -57,7 +56,6 @@ class InvoiceTest extends TestCase
         $this->assertSame(5, $book->catalog_number);
 
         Livewire::test(EditBookCatalog::class, ['record' => $book->getKey()])->assertOk();
-        Livewire::test(ViewBookCatalog::class, ['record' => $book->getKey()])->assertOk();
         $this->get(InvoiceResource::getUrl('index'))->assertOk();
         $this->get(InvoiceResource::getUrl('create'))->assertOk();
     }
