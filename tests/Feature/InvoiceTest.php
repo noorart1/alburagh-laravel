@@ -33,18 +33,22 @@ class InvoiceTest extends TestCase
 
         BookCatalog::create(['catalog_number' => 6, 'title' => 'آخر']);
 
-        Livewire::test(ListBookCatalogs::class)
-            ->loadTable()
-            // cells are plain text until clicked, not one Alpine input per cell
-            ->assertSeeHtml('data-edit="text"')
-            ->assertSeeHtml('data-edit="select"')
-            ->assertDontSeeHtml('textInputTableColumn')
-            ->assertDontSeeHtml('selectTableColumn')
-            ->call('updateTableColumnState', 'quantity', (string) $book->getKey(), 7)
-            ->call('updateTableColumnState', 'title', (string) $book->getKey(), 'عنوان جديد')
-            ->call('updateTableColumnState', 'category', (string) $book->getKey(), 'game')
-            ->call('updateTableColumnState', 'price_usd', (string) $book->getKey(), '')
-            ->call('updateTableColumnState', 'catalog_number', (string) $book->getKey(), 6); // duplicate → rejected
+        $list = Livewire::test(ListBookCatalogs::class)
+            ->assertSeeHtml('id="bk-table"')
+            ->assertSee('آخر');
+
+        $list->call('saveCell', $book->getKey(), 'quantity', '7')
+            ->call('saveCell', $book->getKey(), 'title', 'عنوان جديد')
+            ->call('saveCell', $book->getKey(), 'category', 'game')
+            ->call('saveCell', $book->getKey(), 'price_usd', '')
+            ->call('saveCell', $book->getKey(), 'catalog_number', '6') // duplicate → rejected
+            ->assertReturned(fn (array $result): bool => isset($result['error']))
+            ->call('saveCell', $book->getKey(), 'quantity', '-1') // negative stock → rejected
+            ->assertReturned(fn (array $result): bool => isset($result['error']));
+
+        $page = $list->instance()->fetchBooks(['search' => 'عنوان', 'perPage' => 50, 'hidden' => ['cover_image', 'bogus']]);
+        $this->assertSame(1, $page['total']);
+        $this->assertSame(['hidden' => ['cover_image'], 'perPage' => 50], array_intersect_key(auth()->user()->fresh()->book_catalogs_table_columns, ['hidden' => 0, 'perPage' => 0]));
 
         $book->refresh();
         $this->assertSame(7, $book->quantity);

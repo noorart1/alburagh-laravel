@@ -826,103 +826,6 @@ html.dark .fi-no-notification[class*="warning"] {
         font-size: 1.15rem !important;
     }
 }
-
-/* Click-to-edit cells (ClickToEdit*Column): plain text until clicked */
-.bc-edit {
-    display: flex;
-    align-items: center;
-    min-height: 1.9rem;
-    padding: 2px 6px;
-    border-radius: .375rem;
-    font-size: .8125rem;
-    cursor: text;
-    overflow: hidden;
-    white-space: nowrap;
-    text-overflow: ellipsis;
-}
-
-
-.bc-edit[data-type="number"] {
-    justify-content: center;
-    font-variant-numeric: tabular-nums;
-}
-
-.bc-edit-val {
-    overflow: hidden;
-    text-overflow: ellipsis;
-}
-
-.bc-edit:focus-visible {
-    outline: 1px dashed rgb(245 158 11 / .5);
-}
-
-.bc-edit.is-editing {
-    flex-direction: column;
-    align-items: stretch;
-    gap: 4px;
-    overflow: visible;
-    cursor: default;
-}
-
-.bc-edit.is-editing .bc-edit-val {
-    display: none;
-}
-
-.bc-edit-actions {
-    display: flex;
-    gap: 4px;
-    justify-content: flex-end;
-}
-
-.bc-edit-actions button {
-    padding: 1px 8px;
-    font-size: .75rem;
-    border: 1px solid #9ca3af;
-    border-radius: .25rem;
-    background: #f3f4f6;
-    color: #111827;
-}
-
-html.dark .bc-edit-actions button {
-    background: #3f3f46;
-    color: #f4f4f5;
-    border-color: #52525b;
-}
-
-.bc-edit-input {
-    width: 100%;
-    padding: 2px 6px;
-    font-size: .8125rem;
-    border: 1px solid #f59e0b;
-    border-radius: .375rem;
-    background: #fff;
-    color: inherit;
-}
-
-html.dark .bc-edit-input {
-    background: #18181b;
-}
-
-.bc-edit-input[type="number"] {
-    -moz-appearance: textfield;
-    appearance: textfield;
-    text-align: center;
-}
-
-.bc-edit-input[type="number"]::-webkit-inner-spin-button,
-.bc-edit-input[type="number"]::-webkit-outer-spin-button {
-    -webkit-appearance: none;
-    margin: 0;
-}
-
-.bc-edit.is-saving .bc-edit-input {
-    opacity: .6;
-}
-
-.bc-edit.is-invalid .bc-edit-input {
-    border-color: #dc2626;
-    box-shadow: 0 0 0 2px rgb(220 38 38 / .25);
-}
 </style>
 
 <div id="bc-pin-wrap">
@@ -1131,7 +1034,7 @@ html.dark .bc-edit-input {
     // toolbar را بازسازی می‌کند و یک node منتقل‌شده را از دست می‌دهد.
     function pinHeadingIntoToolbar() {
         const heading = document.querySelector('.fi-header-heading');
-        const toolbar = document.querySelector('.fi-ta-header-toolbar');
+        const toolbar = document.querySelector('.fi-ta-header-toolbar, #bk .bk-bar');
 
         if (!heading || !toolbar) return;
 
@@ -1400,101 +1303,6 @@ html.dark .bc-edit-input {
 
     rebuildHeader();
     pinHeadingIntoToolbar();
-})();
-
-// Click-to-edit cells (ClickToEditTextColumn / ClickToEditSelectColumn):
-// cells are plain text; only the one being edited becomes an input. Saving
-// goes through the same updateTableColumnState() Filament's inputs use.
-(() => {
-    const optionsCache = {};
-
-    const close = (cell) => {
-        cell.querySelector('.bc-edit-input')?.remove();
-        cell.querySelector('.bc-edit-actions')?.remove();
-        cell.classList.remove('is-editing', 'is-invalid', 'is-saving');
-        cell.title = cell.querySelector('.bc-edit-val').textContent;
-    };
-
-    const open = async (cell) => {
-        if (cell.classList.contains('is-editing')) return;
-
-        const wire = window.Livewire?.find(cell.closest('[wire\\:id]')?.getAttribute('wire:id'));
-        if (!wire) return;
-
-        const { name, record, value } = cell.dataset;
-        const isSelect = cell.dataset.edit === 'select';
-        cell.classList.add('is-editing');
-
-        let input;
-        if (isSelect) {
-            optionsCache[name] ??= wire.callTableColumnMethod(name, record, 'getOptionsForJs');
-            const options = await optionsCache[name];
-            input = document.createElement('select');
-            if (cell.dataset.nullable === '1') input.add(new Option('—', ''));
-            (options || []).forEach((o) => input.add(new Option(o.label, o.value)));
-        } else {
-            input = document.createElement('input');
-            input.type = cell.dataset.type || 'text';
-            input.step = 'any';
-        }
-        input.className = 'bc-edit-input';
-        input.value = value;
-        const actions = document.createElement('div');
-        actions.className = 'bc-edit-actions';
-        actions.innerHTML = '<button type="button">حفظ</button><button type="button">الغاء</button>';
-        const [saveButton, cancelButton] = actions.children;
-        cell.append(input, actions);
-        input.focus();
-        input.select?.();
-
-        let done = false;
-        const save = async () => {
-            if (done) return;
-            if (input.value === value) { done = true; close(cell); return; }
-
-            done = true;
-            cell.classList.add('is-saving');
-            input.disabled = true;
-            const result = await wire.updateTableColumnState(name, record, input.value);
-            input.disabled = false;
-            cell.classList.remove('is-saving');
-
-            if (result?.error) {
-                done = false;
-                cell.classList.add('is-invalid');
-                cell.title = result.error;
-                window.FilamentNotification && new FilamentNotification().title(result.error).danger().send();
-                input.focus();
-                return;
-            }
-
-            cell.dataset.value = input.value;
-            cell.querySelector('.bc-edit-val').textContent = isSelect
-                ? (input.selectedOptions[0]?.value ? input.selectedOptions[0].text : '')
-                : input.value;
-            close(cell);
-        };
-
-        const cancel = () => { done = true; close(cell); cell.focus(); };
-        saveButton.addEventListener('click', save);
-        cancelButton.addEventListener('click', cancel);
-        input.addEventListener('keydown', (e) => {
-            if (e.key === 'Enter') { e.preventDefault(); save(); }
-            if (e.key === 'Escape') { e.stopPropagation(); cancel(); }
-        });
-    };
-
-    document.addEventListener('click', (e) => {
-        const cell = e.target.closest('.bc-edit');
-        if (cell && !e.target.closest('.bc-edit-input, .bc-edit-actions')) open(cell);
-    });
-
-    document.addEventListener('keydown', (e) => {
-        if (e.key === 'Enter' && e.target.classList?.contains('bc-edit')) {
-            e.preventDefault();
-            open(e.target);
-        }
-    });
 })();
 </script>
 @endif

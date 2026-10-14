@@ -8,7 +8,6 @@ use App\Filament\Resources\BookCatalogs\Pages\ListBookCatalogs;
 use App\Filament\Resources\BookCatalogs\Pages\ViewBookCatalog;
 use App\Filament\Resources\BookCatalogs\Schemas\BookCatalogForm;
 use App\Filament\Resources\BookCatalogs\Schemas\BookCatalogInfolist;
-use App\Filament\Resources\BookCatalogs\Tables\BookCatalogsTable;
 use App\Models\BookCatalog;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
@@ -52,7 +51,7 @@ class BookCatalogResource extends Resource
 
     public static function table(Table $table): Table
     {
-        return BookCatalogsTable::configure($table);
+        return $table; // the list renders its own table, see ListBookCatalogs::bookColumns()
     }
 
     public static function getPages(): array

@@ -12,7 +12,13 @@ use Filament\Actions\Exports\Enums\ExportFormat;
 use Filament\Forms\Components\FileUpload;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\ListRecords;
+use Filament\Schemas\Components\View;
+use Filament\Schemas\Schema;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Validator;
+use Illuminate\Validation\Rule;
+use Livewire\Attributes\Renderless;
 use Livewire\Features\SupportFileUploads\TemporaryUploadedFile;
 use OpenSpout\Reader\XLSX\Reader as XlsxReader;
 
@@ -21,42 +27,154 @@ class ListBookCatalogs extends ListRecords
     protected static string $resource = BookCatalogResource::class;
 
     /**
-     * Column visibility survives logout/browser restart by storing it on
-     * the user record instead of the session (which is wiped on logout).
+     * The list is a plain JS table (resources/views/filament/book-catalogs/table.blade.php)
+     * instead of Filament's table: at 50 rows x 26 columns Livewire's re-render
+     * and morph of ~16k nodes made every page/sort/filter change slow. Rows come
+     * from fetchBooks() as JSON and cells save through saveCell().
      *
-     * @return array<int, array<string, mixed>>
+     * @return array<string, array{label: string, type: string, width: int, rules: array<int, mixed>, search: bool, options?: array<string, string>}>
      */
-    protected function loadTableColumnsFromSession(): array
+    public static function bookColumns(): array
     {
-        return auth()->user()->book_catalogs_table_columns
-            ?? $this->getDefaultTableColumnState();
+        $ar = app()->getLocale() === 'ar';
+        $col = fn (string $label, string $type, int $width, array $rules = [], bool $search = false): array => compact('label', 'type', 'width', 'rules', 'search');
+
+        return [
+            'catalog_number' => $col('الرقم', 'number', 70, [], true),
+            'cover_image' => $col($ar ? 'الغلاف' : 'Cover', 'image', 60),
+            'barcode' => $col($ar ? 'باركد الكتاب' : 'Barcode', 'text', 150, ['nullable', 'max:50'], true),
+            'series_name' => $col($ar ? 'اسم السلسلة' : 'Series Name', 'text', 150, ['nullable', 'max:255'], true),
+            'title' => $col($ar ? 'اسم الكتاب' : 'Book Title', 'text', 220, ['required', 'max:255'], true),
+            'category' => $col($ar ? 'الصنف' : 'Category', 'select', 110, ['required', Rule::in(array_keys(BookCatalog::categoryOptions()))]) + ['options' => BookCatalog::categoryOptions()],
+            'publisher' => $col($ar ? 'الناشر' : 'Publisher', 'select', 170, ['nullable', Rule::in(array_keys(BookCatalog::publisherOptions()))]) + ['options' => BookCatalog::publisherOptions()],
+            'author' => $col($ar ? 'اسم المؤلف' : 'Author', 'text', 130, ['nullable', 'max:255'], true),
+            'illustrator' => $col($ar ? 'الرسام' : 'Illustrator', 'text', 130, ['nullable', 'max:255'], true),
+            'subject' => $col($ar ? 'موضوع الكتاب' : 'Subject', 'text', 140, ['nullable', 'max:255'], true),
+            'edition_number' => $col($ar ? 'رقم الطبعة' : 'Edition', 'number', 80, ['nullable', 'integer', 'min:0']),
+            'print_place' => $col($ar ? 'مكان الطباعة' : 'Print Place', 'text', 110, ['nullable', 'max:255'], true),
+            'print_year' => $col($ar ? 'سنة الطباعة' : 'Print Year', 'number', 90, ['nullable', 'integer', 'between:1000,9999']),
+            'short_description' => $col($ar ? 'نبذة مختصرة' : 'Short Description', 'text', 240, ['nullable', 'string']),
+            'pages' => $col($ar ? 'عدد الصفحات' : 'Pages', 'number', 85, ['nullable', 'integer', 'min:0']),
+            'price_usd' => $col($ar ? 'دولار' : 'USD', 'number', 80, ['nullable', 'numeric', 'min:0']),
+            'price_aed' => $col($ar ? 'درهم' : 'AED', 'number', 80, ['nullable', 'numeric', 'min:0']),
+            'price_iqd' => $col($ar ? 'دينار' : 'IQD', 'number', 90, ['nullable', 'numeric', 'min:0']),
+            'quantity' => $col($ar ? 'المخزون' : 'Stock', 'number', 90, ['required', 'integer', 'min:0']),
+            'cost_iqd' => $col($ar ? 'الكلفة دينار' : 'Cost IQD', 'number', 90, ['nullable', 'numeric', 'min:0']),
+            'deposit_number' => $col($ar ? 'رقم الإيداع' : 'Deposit No.', 'text', 100, ['nullable', 'max:100'], true),
+            'deposit_year' => $col($ar ? 'سنة الإيداع' : 'Deposit Year', 'number', 90, ['nullable', 'integer', 'between:1000,9999']),
+            'size' => $col($ar ? 'القياس' : 'Size', 'text', 120, ['nullable', 'max:100'], true),
+            'weight' => $col($ar ? 'الوزن' : 'Weight', 'number', 80, ['nullable', 'numeric', 'min:0']),
+            'age_group' => $col($ar ? 'الفئة العمرية' : 'Age Group', 'text', 100, ['nullable', 'max:100'], true),
+        ];
     }
 
-    protected function persistTableColumns(): void
+    public function content(Schema $schema): Schema
     {
-        if (! $this->getTable()->persistsColumnsInSession()) {
-            return;
-        }
-
-        auth()->user()->update([
-            'book_catalogs_table_columns' => $this->tableColumns,
+        return $schema->components([
+            View::make('filament.book-catalogs.table')->viewData(fn (): array => [
+                'columns' => collect(static::bookColumns())->map(fn (array $c): array => collect($c)->except('rules')->all()),
+                'prefs' => $prefs = $this->bookPrefs(),
+                'initial' => $this->fetchBooks($prefs),
+                'editUrl' => BookCatalogResource::getUrl('edit', ['record' => '__ID__']),
+                'viewUrl' => BookCatalogResource::getUrl('view', ['record' => '__ID__']),
+            ]),
         ]);
     }
 
     /**
-     * An inline edit only changes that one cell, which the browser already
-     * shows, so skip re-rendering the whole (wide) table. Category/publisher
-     * still re-render because the ✓ columns and filters depend on them.
+     * Search, filters, sort, page size and hidden columns, stored on the user
+     * so they survive logout. Older values are Filament's column-manager state.
+     *
+     * @return array<string, mixed>
      */
-    public function updateTableColumnState(string $column, string $record, mixed $input): mixed
+    protected function bookPrefs(): array
     {
-        $result = parent::updateTableColumnState($column, $record, $input);
+        $stored = auth()->user()->book_catalogs_table_columns ?? [];
 
-        if (! in_array($column, ['category', 'publisher'], true) && ! isset($result['error'])) {
-            $this->skipRender();
+        if (array_is_list($stored)) {
+            $stored = ['hidden' => collect($stored)->where('type', 'column')->where('isToggled', false)->pluck('name')->values()->all()];
         }
 
-        return $result;
+        return $stored + ['hidden' => [], 'search' => '', 'category' => [], 'publisher' => [], 'sort' => 'catalog_number', 'dir' => 'asc', 'perPage' => 25, 'page' => 1];
+    }
+
+    /** @return array{rows: array<int, array<string, mixed>>, total: int, lastPage: int, page: int} */
+    #[Renderless]
+    public function fetchBooks(array $q): array
+    {
+        $columns = static::bookColumns();
+        $q = [
+            'hidden' => array_values(array_intersect((array) ($q['hidden'] ?? []), array_keys($columns))),
+            'search' => trim((string) ($q['search'] ?? '')),
+            'category' => array_values(array_intersect((array) ($q['category'] ?? []), array_keys(BookCatalog::categoryOptions()))),
+            'publisher' => array_values(array_intersect((array) ($q['publisher'] ?? []), array_keys(BookCatalog::publisherOptions()))),
+            'sort' => isset($columns[$q['sort'] ?? '']) && $q['sort'] !== 'cover_image' ? $q['sort'] : 'catalog_number',
+            'dir' => ($q['dir'] ?? '') === 'desc' ? 'desc' : 'asc',
+            'perPage' => in_array((int) ($q['perPage'] ?? 0), [10, 25, 50, 100], true) ? (int) $q['perPage'] : 25,
+            'page' => max(1, (int) ($q['page'] ?? 1)),
+        ];
+
+        if (auth()->user()->book_catalogs_table_columns !== $q) {
+            auth()->user()->update(['book_catalogs_table_columns' => $q]);
+        }
+
+        $books = BookCatalog::query()
+            ->when($q['search'] !== '', fn (Builder $query) => $query->where(function (Builder $query) use ($columns, $q): void {
+                foreach (array_keys(array_filter($columns, fn (array $c): bool => $c['search'])) as $name) {
+                    $query->orWhere($name, 'like', '%'.$q['search'].'%');
+                }
+            }))
+            ->when($q['category'], fn (Builder $query, array $v) => $query->whereIn('category', $v))
+            ->when($q['publisher'], fn (Builder $query, array $v) => $query->whereIn('publisher', $v))
+            ->orderBy($q['sort'], $q['dir'])
+            ->orderBy('id')
+            ->paginate($q['perPage'], ['id', ...array_keys($columns)], 'page', $q['page']);
+
+        if ($books->isEmpty() && $q['page'] > 1) {
+            return $this->fetchBooks([...$q, 'page' => $books->lastPage()]);
+        }
+
+        $disk = Storage::disk('public');
+
+        return [
+            'rows' => $books->getCollection()->map(fn (BookCatalog $book): array => [
+                ...$book->toArray(),
+                'cover_image' => $book->cover_image ? $disk->url($book->cover_image) : null,
+            ])->all(),
+            'total' => $books->total(),
+            'lastPage' => $books->lastPage(),
+            'page' => $books->currentPage(),
+        ];
+    }
+
+    /** @return array{value?: mixed, error?: string} */
+    #[Renderless]
+    public function saveCell(int $id, string $field, mixed $value): array
+    {
+        $column = static::bookColumns()[$field] ?? null;
+        abort_if(! $column || $column['type'] === 'image', 422);
+
+        $rules = $field === 'catalog_number'
+            ? ['required', 'integer', Rule::unique('book_catalogs', 'catalog_number')->ignore($id)]
+            : $column['rules'];
+        $value = $value === '' ? null : $value;
+
+        $validator = Validator::make(['value' => $value], ['value' => $rules], [], ['value' => $column['label']]);
+
+        if ($validator->fails()) {
+            return ['error' => $validator->errors()->first()];
+        }
+
+        $book = BookCatalog::findOrFail($id);
+        $book->update([$field => $value]);
+
+        return ['value' => $book->refresh()->getAttribute($field)];
+    }
+
+    #[Renderless]
+    public function deleteBooks(array $ids): void
+    {
+        BookCatalog::whereKey($ids)->get()->each->delete();
     }
 
     protected function getHeaderActions(): array
