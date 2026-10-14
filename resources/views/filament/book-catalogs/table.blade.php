@@ -263,9 +263,10 @@ html.dark #bk { --bk-line: #393c42; --bk-head: #34373c; --bk-odd: #24262a; --bk-
     // Header actions (import, create…) re-render the page; refresh rows after them.
     document.addEventListener('livewire:init', () => Livewire.hook('commit', ({ component, commit, succeed }) => {
         if (component.id !== root.closest('[wire\\:id]').getAttribute('wire:id')) return;
-        if ((commit.calls || []).some((c) => !['fetchBooks', 'saveCell', 'deleteBooks'].includes(c.method))) succeed(() => setTimeout(load));
+        if ((commit.calls || []).some((c) => c.method === 'callMountedAction')) succeed(() => setTimeout(load));
     }));
 
     show(@js($initial));
 })();
 </script>
+

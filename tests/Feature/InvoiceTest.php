@@ -36,7 +36,6 @@ class InvoiceTest extends TestCase
         $list = Livewire::test(ListBookCatalogs::class)
             ->assertSeeHtml('id="bk-table"')
             ->assertSee('آخر');
-
         $list->call('saveCell', $book->getKey(), 'quantity', '7')
             ->call('saveCell', $book->getKey(), 'title', 'عنوان جديد')
             ->call('saveCell', $book->getKey(), 'category', 'game')
@@ -129,6 +128,20 @@ class InvoiceTest extends TestCase
         file_put_contents($path, ob_get_clean());
 
         return IOFactory::load($path)->getActiveSheet();
+    }
+
+    public function test_export_action_follows_list_filters(): void
+    {
+        $this->actingAs(User::factory()->create(['is_admin' => true, 'is_active' => true]));
+        BookCatalog::create(['catalog_number' => 1, 'title' => 'x', 'category' => 'book']);
+        BookCatalog::create(['catalog_number' => 2, 'title' => 'y', 'category' => 'game']);
+
+        $list = Livewire::test(ListBookCatalogs::class);
+        $list->instance()->fetchBooks(['category' => ['game']]);
+        // columns used to default to the (now gone) Filament table's visible ones: none → nothing exported
+        $list->callAction('exportExcel')->assertHasNoActionErrors();
+
+        $this->assertSame(1, \Filament\Actions\Exports\Models\Export::sole()->total_rows);
     }
 
     public function test_excel_import_matches_by_barcode(): void

@@ -26,6 +26,8 @@ class ListBookCatalogs extends ListRecords
 {
     protected static string $resource = BookCatalogResource::class;
 
+    protected string $view = 'filament.pages.list-book-catalogs';
+
     /**
      * The list is a plain JS table (resources/views/filament/book-catalogs/table.blade.php)
      * instead of Filament's table: at 50 rows x 26 columns Livewire's re-render
@@ -89,7 +91,7 @@ class ListBookCatalogs extends ListRecords
      */
     protected function bookPrefs(): array
     {
-        $stored = auth()->user()->book_catalogs_table_columns ?? [];
+        $stored = auth()->user()?->book_catalogs_table_columns ?? [];
 
         if (array_is_list($stored)) {
             $stored = ['hidden' => collect($stored)->where('type', 'column')->where('isToggled', false)->pluck('name')->values()->all()];
@@ -114,18 +116,12 @@ class ListBookCatalogs extends ListRecords
             'page' => max(1, (int) ($q['page'] ?? 1)),
         ];
 
-        if (auth()->user()->book_catalogs_table_columns !== $q) {
-            auth()->user()->update(['book_catalogs_table_columns' => $q]);
+        // user is null in the re-render right after a sync-queue export (its job calls auth()->forgetGuards())
+        if (($user = auth()->user()) && $user->book_catalogs_table_columns !== $q) {
+            $user->update(['book_catalogs_table_columns' => $q]);
         }
 
-        $books = BookCatalog::query()
-            ->when($q['search'] !== '', fn (Builder $query) => $query->where(function (Builder $query) use ($columns, $q): void {
-                foreach (array_keys(array_filter($columns, fn (array $c): bool => $c['search'])) as $name) {
-                    $query->orWhere($name, 'like', '%'.$q['search'].'%');
-                }
-            }))
-            ->when($q['category'], fn (Builder $query, array $v) => $query->whereIn('category', $v))
-            ->when($q['publisher'], fn (Builder $query, array $v) => $query->whereIn('publisher', $v))
+        $books = static::filterBooks(BookCatalog::query(), $q)
             ->orderBy($q['sort'], $q['dir'])
             ->orderBy('id')
             ->paginate($q['perPage'], ['id', ...array_keys($columns)], 'page', $q['page']);
@@ -145,6 +141,22 @@ class ListBookCatalogs extends ListRecords
             'lastPage' => $books->lastPage(),
             'page' => $books->currentPage(),
         ];
+    }
+
+    /** Search + category/publisher filters of the list; the Excel export uses them too. */
+    protected static function filterBooks(Builder $query, array $q): Builder
+    {
+        $search = trim((string) ($q['search'] ?? ''));
+        $searchable = array_keys(array_filter(static::bookColumns(), fn (array $c): bool => $c['search']));
+
+        return $query
+            ->when($search !== '', fn (Builder $query) => $query->where(function (Builder $query) use ($searchable, $search): void {
+                foreach ($searchable as $name) {
+                    $query->orWhere($name, 'like', '%'.$search.'%');
+                }
+            }))
+            ->when($q['category'] ?? [], fn (Builder $query, array $v) => $query->whereIn('category', $v))
+            ->when($q['publisher'] ?? [], fn (Builder $query, array $v) => $query->whereIn('publisher', $v));
     }
 
     /** @return array{value?: mixed, error?: string} */
@@ -191,9 +203,10 @@ class ListBookCatalogs extends ListRecords
                 ->formats([
                     ExportFormat::Xlsx,
                 ])
-                ->enableVisibleTableColumnsByDefault()
                 ->columnMappingColumns(3)
                 ->modifyQueryUsing(function (Builder $query, array $options): Builder {
+                    $query = static::filterBooks($query, $this->bookPrefs());
+
                     if (($options['export_scope'] ?? 'all') !== 'range') {
                         return $query;
                     }
