@@ -231,10 +231,6 @@ html:not(.dark) .fi-ta-table tbody td {
     border-inline-end: 1px solid #eceef1 !important;
 }
 
-html:not(.dark) .fi-ta-table tbody tr:hover td {
-    background: #e9edf2 !important;
-}
-
 html.dark .fi-ta-table thead th {
     background: #34373c !important;
     color: #f0f1f2 !important;
@@ -252,10 +248,6 @@ html.dark .fi-ta-table tbody td {
     color: #e2e4e7 !important;
     border-bottom: 1px solid #393c42 !important;
     border-inline-end: 1px solid #34373c !important;
-}
-
-html.dark .fi-ta-table tbody tr:hover td {
-    background: #353941 !important;
 }
 
 /* =========================================================
@@ -849,11 +841,6 @@ html.dark .fi-no-notification[class*="warning"] {
     text-overflow: ellipsis;
 }
 
-.bc-edit:hover,
-.bc-edit:focus-visible {
-    background: rgb(245 158 11 / .08);
-    outline: 1px dashed rgb(245 158 11 / .5);
-}
 
 .bc-edit[data-type="number"] {
     justify-content: center;
@@ -865,8 +852,41 @@ html.dark .fi-no-notification[class*="warning"] {
     text-overflow: ellipsis;
 }
 
+.bc-edit:focus-visible {
+    outline: 1px dashed rgb(245 158 11 / .5);
+}
+
+.bc-edit.is-editing {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 4px;
+    overflow: visible;
+    cursor: default;
+}
+
 .bc-edit.is-editing .bc-edit-val {
     display: none;
+}
+
+.bc-edit-actions {
+    display: flex;
+    gap: 4px;
+    justify-content: flex-end;
+}
+
+.bc-edit-actions button {
+    padding: 1px 8px;
+    font-size: .75rem;
+    border: 1px solid #9ca3af;
+    border-radius: .25rem;
+    background: #f3f4f6;
+    color: #111827;
+}
+
+html.dark .bc-edit-actions button {
+    background: #3f3f46;
+    color: #f4f4f5;
+    border-color: #52525b;
 }
 
 .bc-edit-input {
@@ -1390,6 +1410,7 @@ html.dark .bc-edit-input {
 
     const close = (cell) => {
         cell.querySelector('.bc-edit-input')?.remove();
+        cell.querySelector('.bc-edit-actions')?.remove();
         cell.classList.remove('is-editing', 'is-invalid', 'is-saving');
         cell.title = cell.querySelector('.bc-edit-val').textContent;
     };
@@ -1418,7 +1439,11 @@ html.dark .bc-edit-input {
         }
         input.className = 'bc-edit-input';
         input.value = value;
-        cell.appendChild(input);
+        const actions = document.createElement('div');
+        actions.className = 'bc-edit-actions';
+        actions.innerHTML = '<button type="button">حفظ</button><button type="button">الغاء</button>';
+        const [saveButton, cancelButton] = actions.children;
+        cell.append(input, actions);
         input.focus();
         input.select?.();
 
@@ -1450,17 +1475,18 @@ html.dark .bc-edit-input {
             close(cell);
         };
 
-        input.addEventListener('blur', save);
-        if (isSelect) input.addEventListener('change', () => input.blur());
+        const cancel = () => { done = true; close(cell); cell.focus(); };
+        saveButton.addEventListener('click', save);
+        cancelButton.addEventListener('click', cancel);
         input.addEventListener('keydown', (e) => {
-            if (e.key === 'Enter') { e.preventDefault(); input.blur(); }
-            if (e.key === 'Escape') { e.stopPropagation(); done = true; close(cell); cell.focus(); }
+            if (e.key === 'Enter') { e.preventDefault(); save(); }
+            if (e.key === 'Escape') { e.stopPropagation(); cancel(); }
         });
     };
 
     document.addEventListener('click', (e) => {
         const cell = e.target.closest('.bc-edit');
-        if (cell && !e.target.closest('.bc-edit-input')) open(cell);
+        if (cell && !e.target.closest('.bc-edit-input, .bc-edit-actions')) open(cell);
     });
 
     document.addEventListener('keydown', (e) => {
