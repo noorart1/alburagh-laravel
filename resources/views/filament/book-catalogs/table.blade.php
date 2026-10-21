@@ -15,7 +15,6 @@
 
     <div class="bk-scroll">
         <table id="bk-table">
-            <colgroup></colgroup>
             <thead></thead>
             <tbody></tbody>
         </table>
@@ -44,7 +43,7 @@ html.dark #bk { --bk-line: #393c42; --bk-head: #34373c; --bk-odd: #24262a; --bk-
 .bk-menu[data-menu=columns] > div { grid-template-columns: repeat(3, max-content); column-gap: 16px; }
 .bk-menu label { display: flex; gap: 6px; align-items: center; white-space: nowrap; cursor: pointer; }
 .bk-scroll { overflow: auto; max-height: calc(100vh - 210px); border: 1px solid var(--bk-line); border-radius: .5rem; }
-#bk-table { table-layout: fixed; border-collapse: separate; border-spacing: 0; width: max-content; min-width: 100%; transition: opacity .1s; }
+#bk-table { border-collapse: separate; border-spacing: 0; width: max-content; min-width: 100%; transition: opacity .1s; }
 #bk-table.is-loading { opacity: .5; }
 #bk-table th, #bk-table td { padding: 4px 6px; border-bottom: 1px solid var(--bk-line); border-inline-end: 1px solid var(--bk-line); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; text-align: start; vertical-align: middle; }
 #bk-table thead th { position: sticky; top: 0; z-index: 2; background: var(--bk-head); font-weight: 700; }
@@ -58,6 +57,7 @@ html.dark #bk { --bk-line: #393c42; --bk-head: #34373c; --bk-odd: #24262a; --bk-
 #bk-table td.is-editing { overflow: visible; white-space: normal; }
 #bk-table td img { width: 40px; height: 40px; object-fit: cover; border-radius: 4px; display: block; margin: auto; }
 #bk-table td.a a { color: #d97706; margin-inline-end: 8px; }
+.bk-ed { min-width: 180px; }
 .bk-ed input, .bk-ed select { width: 100%; padding: 2px 6px; border: 1px solid #f59e0b; border-radius: .375rem; background: var(--bk-input); color: inherit; }
 .bk-ed.is-invalid input, .bk-ed.is-invalid select { border-color: #dc2626; box-shadow: 0 0 0 2px rgb(220 38 38 / .25); }
 .bk-ed div { display: flex; gap: 4px; justify-content: flex-end; margin-top: 4px; }
@@ -142,13 +142,13 @@ html.dark #bk { --bk-line: #393c42; --bk-head: #34373c; --bk-odd: #24262a; --bk-
     const cell = (r, f) => {
         const c = COLS[f];
         if (c.type === 'image') return `<td>${r[f] ? `<img loading="lazy" src="${esc(r[f])}" alt="">` : ''}</td>`;
-        const text = esc(label(f, r[f]));
-        return `<td class="e${c.type === 'number' ? ' n' : ''}" data-f="${f}" title="${text}">${text}</td>`;
+        const full = String(label(f, r[f]));
+        const text = full.length > 40 ? full.slice(0, 40) + '…' : full; // long text (e.g. نبذة مختصرة): full value stays in the tooltip
+        return `<td class="e${c.type === 'number' ? ' n' : ''}" data-f="${f}" title="${esc(full)}">${esc(text)}</td>`;
     };
 
     function draw() {
         const fields = shown();
-        table.querySelector('colgroup').innerHTML = '<col style="width:34px">' + fields.map((f) => `<col style="width:${COLS[f].width}px">`).join('') + '<col style="width:60px">';
         table.querySelector('thead').innerHTML = '<tr><th><input type="checkbox" id="bk-all"></th>'
             + fields.map((f) => `<th${COLS[f].type === 'image' ? '' : ` data-sort="${f}"`} class="${state.sort === f ? 'is-sorted' + (state.dir === 'desc' ? ' is-desc' : '') : ''}" title="${esc(COLS[f].label)}">${esc(COLS[f].label)}</th>`).join('')
             + '<th></th></tr>';

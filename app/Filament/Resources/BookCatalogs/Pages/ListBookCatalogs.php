@@ -34,39 +34,39 @@ class ListBookCatalogs extends ListRecords
      * and morph of ~16k nodes made every page/sort/filter change slow. Rows come
      * from fetchBooks() as JSON and cells save through saveCell().
      *
-     * @return array<string, array{label: string, type: string, width: int, rules: array<int, mixed>, search: bool, options?: array<string, string>}>
+     * @return array<string, array{label: string, type: string, rules: array<int, mixed>, search: bool, options?: array<string, string>}>
      */
     public static function bookColumns(): array
     {
         $ar = app()->getLocale() === 'ar';
-        $col = fn (string $label, string $type, int $width, array $rules = [], bool $search = false): array => compact('label', 'type', 'width', 'rules', 'search');
+        $col = fn (string $label, string $type, array $rules = [], bool $search = false): array => compact('label', 'type', 'rules', 'search');
 
         return [
-            'catalog_number' => $col('الرقم', 'number', 70, [], true),
-            'cover_image' => $col($ar ? 'الغلاف' : 'Cover', 'image', 60),
-            'barcode' => $col($ar ? 'باركد الكتاب' : 'Barcode', 'text', 150, ['nullable', 'max:50'], true),
-            'series_name' => $col($ar ? 'اسم السلسلة' : 'Series Name', 'text', 150, ['nullable', 'max:255'], true),
-            'title' => $col($ar ? 'اسم الكتاب' : 'Book Title', 'text', 220, ['required', 'max:255'], true),
-            'category' => $col($ar ? 'الصنف' : 'Category', 'select', 110, ['required', Rule::in(array_keys(BookCatalog::categoryOptions()))]) + ['options' => BookCatalog::categoryOptions()],
-            'publisher' => $col($ar ? 'الناشر' : 'Publisher', 'select', 170, ['nullable', Rule::in(array_keys(BookCatalog::publisherOptions()))]) + ['options' => BookCatalog::publisherOptions()],
-            'author' => $col($ar ? 'اسم المؤلف' : 'Author', 'text', 130, ['nullable', 'max:255'], true),
-            'illustrator' => $col($ar ? 'الرسام' : 'Illustrator', 'text', 130, ['nullable', 'max:255'], true),
-            'subject' => $col($ar ? 'موضوع الكتاب' : 'Subject', 'text', 140, ['nullable', 'max:255'], true),
-            'edition_number' => $col($ar ? 'رقم الطبعة' : 'Edition', 'number', 80, ['nullable', 'integer', 'min:0']),
-            'print_place' => $col($ar ? 'مكان الطباعة' : 'Print Place', 'text', 110, ['nullable', 'max:255'], true),
-            'print_year' => $col($ar ? 'سنة الطباعة' : 'Print Year', 'number', 90, ['nullable', 'integer', 'between:1000,9999']),
-            'short_description' => $col($ar ? 'نبذة مختصرة' : 'Short Description', 'text', 240, ['nullable', 'string']),
-            'pages' => $col($ar ? 'عدد الصفحات' : 'Pages', 'number', 85, ['nullable', 'integer', 'min:0']),
-            'price_usd' => $col($ar ? 'دولار' : 'USD', 'number', 80, ['nullable', 'numeric', 'min:0']),
-            'price_aed' => $col($ar ? 'درهم' : 'AED', 'number', 80, ['nullable', 'numeric', 'min:0']),
-            'price_iqd' => $col($ar ? 'دينار' : 'IQD', 'number', 90, ['nullable', 'numeric', 'min:0']),
-            'quantity' => $col($ar ? 'المخزون' : 'Stock', 'number', 90, ['required', 'integer', 'min:0']),
-            'cost_iqd' => $col($ar ? 'الكلفة دينار' : 'Cost IQD', 'number', 90, ['nullable', 'numeric', 'min:0']),
-            'deposit_number' => $col($ar ? 'رقم الإيداع' : 'Deposit No.', 'text', 100, ['nullable', 'max:100'], true),
-            'deposit_year' => $col($ar ? 'سنة الإيداع' : 'Deposit Year', 'number', 90, ['nullable', 'integer', 'between:1000,9999']),
-            'size' => $col($ar ? 'القياس' : 'Size', 'text', 120, ['nullable', 'max:100'], true),
-            'weight' => $col($ar ? 'الوزن' : 'Weight', 'number', 80, ['nullable', 'numeric', 'min:0']),
-            'age_group' => $col($ar ? 'الفئة العمرية' : 'Age Group', 'text', 100, ['nullable', 'max:100'], true),
+            'catalog_number' => $col('الرقم', 'number', [], true),
+            'cover_image' => $col($ar ? 'الغلاف' : 'Cover', 'image'),
+            'barcode' => $col($ar ? 'باركد الكتاب' : 'Barcode', 'text', ['nullable', 'max:50'], true),
+            'series_name' => $col($ar ? 'اسم السلسلة' : 'Series Name', 'text', ['nullable', 'max:255'], true),
+            'title' => $col($ar ? 'اسم الكتاب' : 'Book Title', 'text', ['required', 'max:255'], true),
+            'category' => $col($ar ? 'الصنف' : 'Category', 'select', ['required', Rule::in(array_keys(BookCatalog::categoryOptions()))]) + ['options' => BookCatalog::categoryOptions()],
+            'publisher' => $col($ar ? 'الناشر' : 'Publisher', 'select', ['nullable', Rule::in(array_keys(BookCatalog::publisherOptions()))]) + ['options' => BookCatalog::publisherOptions()],
+            'author' => $col($ar ? 'اسم المؤلف' : 'Author', 'text', ['nullable', 'max:255'], true),
+            'illustrator' => $col($ar ? 'الرسام' : 'Illustrator', 'text', ['nullable', 'max:255'], true),
+            'subject' => $col($ar ? 'موضوع الكتاب' : 'Subject', 'text', ['nullable', 'max:255'], true),
+            'edition_number' => $col($ar ? 'رقم الطبعة' : 'Edition', 'number', ['nullable', 'integer', 'min:0']),
+            'print_place' => $col($ar ? 'مكان الطباعة' : 'Print Place', 'text', ['nullable', 'max:255'], true),
+            'print_year' => $col($ar ? 'سنة الطباعة' : 'Print Year', 'number', ['nullable', 'integer', 'between:1000,9999']),
+            'short_description' => $col($ar ? 'نبذة مختصرة' : 'Short Description', 'text', ['nullable', 'string']),
+            'pages' => $col($ar ? 'عدد الصفحات' : 'Pages', 'number', ['nullable', 'integer', 'min:0']),
+            'price_usd' => $col($ar ? 'دولار' : 'USD', 'number', ['nullable', 'numeric', 'min:0']),
+            'price_aed' => $col($ar ? 'درهم' : 'AED', 'number', ['nullable', 'numeric', 'min:0']),
+            'price_iqd' => $col($ar ? 'دينار' : 'IQD', 'number', ['nullable', 'numeric', 'min:0']),
+            'quantity' => $col($ar ? 'المخزون' : 'Stock', 'number', ['required', 'integer', 'min:0']),
+            'cost_iqd' => $col($ar ? 'الكلفة دينار' : 'Cost IQD', 'number', ['nullable', 'numeric', 'min:0']),
+            'deposit_number' => $col($ar ? 'رقم الإيداع' : 'Deposit No.', 'text', ['nullable', 'max:100'], true),
+            'deposit_year' => $col($ar ? 'سنة الإيداع' : 'Deposit Year', 'number', ['nullable', 'integer', 'between:1000,9999']),
+            'size' => $col($ar ? 'القياس' : 'Size', 'text', ['nullable', 'max:100'], true),
+            'weight' => $col($ar ? 'الوزن' : 'Weight', 'number', ['nullable', 'numeric', 'min:0']),
+            'age_group' => $col($ar ? 'الفئة العمرية' : 'Age Group', 'text', ['nullable', 'max:100'], true),
         ];
     }
 
