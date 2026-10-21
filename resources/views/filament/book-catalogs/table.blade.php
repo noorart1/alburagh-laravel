@@ -143,7 +143,7 @@ html.dark #bk { --bk-line: #393c42; --bk-head: #34373c; --bk-odd: #24262a; --bk-
         const c = COLS[f];
         if (c.type === 'image') return `<td>${r[f] ? `<img loading="lazy" src="${esc(r[f])}" alt="">` : ''}</td>`;
         const full = String(label(f, r[f]));
-        const max = { series_name: 20, subject: 20 }[f] ?? 30; // max characters per column; full value stays in the tooltip
+        const max = { series_name: 20, subject: 20 ,short_description:30,print_place:20,illustrator:15}[f] ?? 30; // max characters per column; full value stays in the tooltip
         const text = full.length > max ? full.slice(0, max) + '…' : full;
         return `<td class="e${c.type === 'number' ? ' n' : ''}" data-f="${f}" title="${esc(full)}">${esc(text)}</td>`;
     };
