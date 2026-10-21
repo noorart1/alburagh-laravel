@@ -143,7 +143,8 @@ html.dark #bk { --bk-line: #393c42; --bk-head: #34373c; --bk-odd: #24262a; --bk-
         const c = COLS[f];
         if (c.type === 'image') return `<td>${r[f] ? `<img loading="lazy" src="${esc(r[f])}" alt="">` : ''}</td>`;
         const full = String(label(f, r[f]));
-        const text = full.length > 40 ? full.slice(0, 40) + '…' : full; // long text (e.g. نبذة مختصرة): full value stays in the tooltip
+        const max = { series_name: 20 }[f] ?? 40; // max characters per column; full value stays in the tooltip
+        const text = full.length > max ? full.slice(0, max) + '…' : full;
         return `<td class="e${c.type === 'number' ? ' n' : ''}" data-f="${f}" title="${esc(full)}">${esc(text)}</td>`;
     };
 
