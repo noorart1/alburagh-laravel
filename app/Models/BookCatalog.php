@@ -22,14 +22,12 @@ class BookCatalog extends Model
         $ar = app()->getLocale() === 'ar';
 
         return [
+            'series' => $ar ? 'سلسلة' : 'Series',
             'book' => $ar ? 'كتاب' : 'Book',
             'part' => $ar ? 'جزء' : 'Part',
             'game' => $ar ? 'لعبة' : 'Game',
             'game_books' => $ar ? 'كتب العاب' : 'Game Books',
-            // 'islamic' absorbed the old 'series' category (see migration)
-            'islamic' => $ar ? 'سلسلة إسلامية' : 'Islamic Series',
-            'islamic_books' => $ar ? 'كتب إسلامية' : 'Islamic Books',
-            'islamic_part' => $ar ? 'جزء إسلامي' : 'Islamic Part',
+            'islamic' => $ar ? 'إسلامي' : 'Islamic',
             'frozen' => $ar ? 'تجميد' : 'Frozen',
         ];
     }
