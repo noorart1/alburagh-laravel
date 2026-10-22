@@ -308,7 +308,9 @@ class ListBookCatalogs extends ListRecords
         $fieldsByLabel = collect(BookCatalogExporter::getColumns())
             ->mapWithKeys(fn ($column) => [$column->getLabel() => $column->getName()]);
 
-        $categoryKeysByLabel = array_flip(BookCatalog::categoryOptions());
+        // old labels from files exported before series + islamic were merged
+        $categoryKeysByLabel = array_flip(BookCatalog::categoryOptions())
+            + ['سلسلة' => 'islamic', 'إسلامي' => 'islamic', 'Series' => 'islamic', 'Islamic' => 'islamic'];
         $publisherKeysByLabel = array_flip(BookCatalog::publisherOptions());
 
         $reader = new XlsxReader();
