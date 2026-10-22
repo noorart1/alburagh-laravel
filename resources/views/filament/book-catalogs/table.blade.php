@@ -117,9 +117,16 @@ html.dark #bk { --bk-line: #393c42; --bk-head: #34373c; --bk-odd: #24262a; --bk-
     const search = $('#bk-search');
     search.value = state.search;
     let searchTimer;
+    let pageBeforeSearch = state.search ? 1 : state.page;
     search.addEventListener('input', () => {
         clearTimeout(searchTimer);
-        searchTimer = setTimeout(() => { state.search = search.value; state.page = 1; load(); }, 350);
+        searchTimer = setTimeout(() => {
+            if (!state.search && search.value) pageBeforeSearch = state.page;
+            state.search = search.value;
+            // clearing the search returns to the page the user was on before searching
+            state.page = search.value ? 1 : pageBeforeSearch;
+            load();
+        }, 350);
     });
 
     const perPage = $('#bk-per-page');
