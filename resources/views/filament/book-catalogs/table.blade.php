@@ -22,7 +22,7 @@
 
     <div class="bk-pager">
         <button type="button" data-go="-1">‹ السابق</button>
-        <span id="bk-page"></span>
+        <span><input type="number" id="bk-page" min="1" title="رقم الصفحة"> / <span id="bk-last"></span></span>
         <button type="button" data-go="1">التالي ›</button>
     </div>
 </div>
@@ -30,7 +30,8 @@
 <style>
 #bk { --bk-line: #e2e4e8; --bk-head: #e7e9ec; --bk-odd: #fbfbfc; --bk-even: #f3f4f6; --bk-text: #3f4650; --bk-input: #fff; font-size: .8125rem; color: var(--bk-text); }
 html.dark #bk { --bk-line: #393c42; --bk-head: #34373c; --bk-odd: #24262a; --bk-even: #2b2e33; --bk-text: #e2e4e7; --bk-input: #18181b; }
-#bk button, #bk select, #bk input[type=search] { padding: 4px 10px; border: 1px solid var(--bk-line); border-radius: .375rem; background: var(--bk-input); color: inherit; }
+#bk-page { width: 70px; text-align: center; }
+#bk button, #bk select, #bk input[type=search], #bk-page { padding: 4px 10px; border: 1px solid var(--bk-line); border-radius: .375rem; background: var(--bk-input); color: inherit; }
 .bk-bar { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin-bottom: 6px; }
 #bk-search { width: 260px; }
 #bk-delete { border-color: #dc2626 !important; color: #dc2626 !important; }
@@ -137,6 +138,12 @@ html.dark #bk { --bk-line: #393c42; --bk-head: #34373c; --bk-odd: #24262a; --bk-
         state.page = Math.min(lastPage, Math.max(1, state.page + +b.dataset.go));
         load();
     }));
+    // typed page number: applied on Enter or when the box loses focus
+    $('#bk-page').addEventListener('change', (e) => {
+        const page = Math.min(lastPage, Math.max(1, Math.trunc(+e.target.value) || state.page));
+        e.target.value = page;
+        if (page !== state.page) { state.page = page; load(); }
+    });
 
     $('#bk-delete').addEventListener('click', async () => {
         if (!confirm(`حذف ${selected.size} كتاب؟`)) return;
@@ -187,7 +194,9 @@ html.dark #bk { --bk-line: #393c42; --bk-head: #34373c; --bk-odd: #24262a; --bk-
         lastPage = data.lastPage;
         state.page = data.page;
         $('#bk-total').textContent = `${data.total} كتاب`;
-        $('#bk-page').textContent = `${data.page} / ${data.lastPage}`;
+        $('#bk-page').value = data.page;
+        $('#bk-page').max = data.lastPage;
+        $('#bk-last').textContent = data.lastPage;
         root.querySelector('[data-go="-1"]').disabled = data.page <= 1;
         root.querySelector('[data-go="1"]').disabled = data.page >= data.lastPage;
         draw();
