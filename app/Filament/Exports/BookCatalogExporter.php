@@ -8,7 +8,6 @@ use Filament\Actions\Exports\Exporter;
 use Filament\Actions\Exports\Models\Export;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
-use Filament\Schemas\Components\Text;
 use OpenSpout\Common\Entity\Row;
 use OpenSpout\Common\Entity\Style\Border;
 use OpenSpout\Common\Entity\Style\BorderPart;
@@ -34,17 +33,7 @@ class BookCatalogExporter extends Exporter
     {
         $ar = app()->getLocale() === 'ar';
 
-        // book counts per option; not in the column names, which import matches on
-        $counts = fn (string $title, array $options, string $field): Text => Text::make(function () use ($title, $options, $field): string {
-            $n = BookCatalog::countsBy($field);
-
-            return $title.': '.collect($options)->map(fn (string $label, string $key): string => "{$label} (".($n[$key] ?? 0).')')->implode(' · ');
-        });
-
         return [
-            $counts($ar ? 'الصنف' : 'Category', BookCatalog::categoryOptions(), 'category'),
-            $counts($ar ? 'الناشر' : 'Publisher', BookCatalog::publisherOptions(), 'publisher'),
-
             Select::make('export_scope')
                 ->label($ar ? 'السجلات المطلوب تصديرها' : 'Rows to export')
                 ->options([
@@ -66,7 +55,36 @@ class BookCatalogExporter extends Exporter
         ];
     }
 
+    /**
+     * Each label carries its book count, e.g. "الصنف (480)", so the export
+     * dialog shows it next to every column. The count is stripped again from
+     * the Excel header (makeXlsxHeaderRow) and when import reads headers.
+     */
     public static function getColumns(): array
+    {
+        $columns = static::baseColumns();
+        // real DB columns count filled values; the ✓ "category_x"/"publisher_x" columns count books with that option
+        $fields = collect($columns)->map(fn (ExportColumn $c): string => $c->getName())
+            ->reject(fn (string $name): bool => (bool) preg_match('/^(category|publisher)_/', $name));
+        $counts = [
+            ...BookCatalog::filledCounts($fields->values()->all()),
+            ...collect(['category', 'publisher'])->flatMap(fn (string $f) => collect(BookCatalog::countsBy($f))->mapWithKeys(fn (int $n, string $k) => ["{$f}_{$k}" => $n]))->all(),
+        ];
+
+        foreach ($columns as $column) {
+            $column->label($column->getLabel().' ('.($counts[$column->getName()] ?? 0).')');
+        }
+
+        return $columns;
+    }
+
+    public static function withoutCount(string $label): string
+    {
+        return preg_replace('/ \(\d+\)$/u', '', $label);
+    }
+
+    /** @return array<int, ExportColumn> */
+    protected static function baseColumns(): array
     {
         $ar = app()->getLocale() === 'ar';
 
@@ -122,6 +140,7 @@ class BookCatalogExporter extends Exporter
 
     public function makeXlsxHeaderRow(array $values, ?Style $style = null): Row
     {
+        $values = array_map(fn ($v): string => static::withoutCount((string) $v), $values);
         $this->trackColumnWidths($values);
 
         return parent::makeXlsxHeaderRow($values, $style);

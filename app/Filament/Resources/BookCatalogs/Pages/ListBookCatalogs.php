@@ -151,15 +151,10 @@ class ListBookCatalogs extends ListRecords
      */
     protected static function bookCounts(): array
     {
-        // nullif(x, '') only on text: MySQL would treat a numeric 0 as '' and skip it
-        $filled = BookCatalog::query()->selectRaw(collect(static::bookColumns())
-            ->map(fn (array $c, string $f): string => ($c['type'] === 'number' ? "count({$f})" : "count(nullif({$f}, ''))")." as {$f}")
-            ->implode(', '))->toBase()->first();
-
         return [
             'category' => BookCatalog::countsBy('category'),
             'publisher' => BookCatalog::countsBy('publisher'),
-            'columns' => array_map('intval', (array) $filled),
+            'columns' => BookCatalog::filledCounts(array_keys(static::bookColumns())),
         ];
     }
 
@@ -327,7 +322,7 @@ class ListBookCatalogs extends ListRecords
     protected static function syncBookCatalogsFromExcel(string $path): array
     {
         $fieldsByLabel = collect(BookCatalogExporter::getColumns())
-            ->mapWithKeys(fn ($column) => [$column->getLabel() => $column->getName()]);
+            ->mapWithKeys(fn ($column) => [BookCatalogExporter::withoutCount($column->getLabel()) => $column->getName()]);
 
         $categoryKeysByLabel = array_flip(BookCatalog::categoryOptions());
         $publisherKeysByLabel = array_flip(BookCatalog::publisherOptions());
@@ -357,7 +352,7 @@ class ListBookCatalogs extends ListRecords
 
                 if ($rowNumber === 2) {
                     foreach ($cells as $index => $label) {
-                        if ($field = $fieldsByLabel->get(trim((string) $label))) {
+                        if ($field = $fieldsByLabel->get(BookCatalogExporter::withoutCount(trim((string) $label)))) {
                             $headerMap[$index] = $field;
 
                             if ($field === 'barcode') {

@@ -40,6 +40,20 @@ class BookCatalog extends Model
         return static::query()->selectRaw("{$field} as k, count(*) as c")->groupBy($field)->pluck('c', 'k')->map(fn ($c) => (int) $c)->all();
     }
 
+    /**
+     * Per column, how many books have a value in it. trim() turns numbers into
+     * text first, so a 0 still counts (MySQL would match 0 against '').
+     *
+     * @param  array<int, string>  $fields
+     * @return array<string, int>
+     */
+    public static function filledCounts(array $fields): array
+    {
+        $row = static::query()->selectRaw(collect($fields)->map(fn (string $f): string => "count(nullif(trim({$f}), '')) as {$f}")->implode(', '))->toBase()->first();
+
+        return array_map('intval', (array) $row);
+    }
+
     /** @return array<string, string> */
     public static function publisherOptions(): array
     {

@@ -143,7 +143,16 @@ class InvoiceTest extends TestCase
         // columns used to default to the (now gone) Filament table's visible ones: none → nothing exported
         $list->callAction('exportExcel')->assertHasNoActionErrors();
 
-        $this->assertSame(1, \Filament\Actions\Exports\Models\Export::sole()->total_rows);
+        $export = \Filament\Actions\Exports\Models\Export::sole();
+        $this->assertSame(1, $export->total_rows);
+
+        // the dialog label carries the count, the Excel header doesn't
+        $title = collect(\App\Filament\Exports\BookCatalogExporter::getColumns())->first(fn ($c) => $c->getName() === 'title');
+        $this->assertStringEndsWith(' (2)', $title->getLabel());
+        $file = \Illuminate\Support\Facades\Storage::disk($export->file_disk)->path($export->getFileDirectory().'/'.$export->file_name.'.xlsx');
+        $header = IOFactory::load($file)->getActiveSheet()->rangeToArray('A2:E2')[0];
+        $this->assertContains(\App\Filament\Exports\BookCatalogExporter::withoutCount($title->getLabel()), $header);
+        $this->assertEmpty(preg_grep('/\(\d+\)$/', array_filter($header)));
     }
 
     public function test_excel_import_matches_by_barcode(): void
