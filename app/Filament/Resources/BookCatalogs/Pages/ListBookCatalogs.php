@@ -10,6 +10,7 @@ use Filament\Actions\CreateAction;
 use Filament\Actions\ExportAction;
 use Filament\Actions\Exports\Enums\ExportFormat;
 use Filament\Forms\Components\FileUpload;
+use Filament\Forms\Components\TextInput;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\ListRecords;
 use Filament\Schemas\Components\View;
@@ -27,6 +28,13 @@ class ListBookCatalogs extends ListRecords
     protected static string $resource = BookCatalogResource::class;
 
     protected string $view = 'filament.pages.list-book-catalogs';
+
+    public function boot(): void
+    {
+        // Export dialog: column names (with their counts) can't be edited, only ticked.
+        // Filament builds them as TextInput 'label', the only field by that name on this page.
+        TextInput::configureUsing(fn (TextInput $input) => $input->getName() === 'label' ? $input->readOnly() : null);
+    }
 
     /**
      * The list is a plain JS table (resources/views/filament/book-catalogs/table.blade.php)

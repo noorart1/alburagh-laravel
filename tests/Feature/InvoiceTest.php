@@ -140,6 +140,9 @@ class InvoiceTest extends TestCase
         $this->assertSame(['book' => 1, 'game' => 1], $counts['category']);
         $this->assertSame(2, $counts['columns']['title']);
         $this->assertSame(0, $counts['columns']['barcode']);
+        // column names in the export dialog are read-only
+        $list->mountAction('exportExcel')->assertFormFieldIsReadOnly('columnMap.title.label');
+        $list->unmountAction();
         // columns used to default to the (now gone) Filament table's visible ones: none → nothing exported
         $list->callAction('exportExcel')->assertHasNoActionErrors();
 
