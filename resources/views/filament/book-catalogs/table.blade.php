@@ -89,14 +89,17 @@ html.dark #bk { --bk-line: #393c42; --bk-head: #34373c; --bk-odd: #24262a; --bk-
     const notify = (msg) => window.FilamentNotification && new FilamentNotification().title(msg).danger().send();
 
     // ---- toolbar ----
-    const checkboxes = (menu, items, isChecked) => {
+    // each option shows its book count, e.g. "سلسلة (49)"
+    const checkboxes = (menu, items, isChecked, counts) => {
         root.querySelector(`[data-menu=${menu}] > div`).innerHTML = Object.entries(items)
-            .map(([k, v]) => `<label><input type="checkbox" value="${esc(k)}"${isChecked(k) ? ' checked' : ''}> ${esc(v)}</label>`).join('');
+            .map(([k, v]) => `<label><input type="checkbox" value="${esc(k)}"${isChecked(k) ? ' checked' : ''}> ${esc(v)} (${counts[k] ?? 0})</label>`).join('');
     };
     const markMenus = () => ['category', 'publisher'].forEach((m) => root.querySelector(`[data-menu=${m}]`).classList.toggle('is-active', state[m].length > 0));
-    checkboxes('category', COLS.category.options, (k) => state.category.includes(k));
-    checkboxes('publisher', COLS.publisher.options, (k) => state.publisher.includes(k));
-    checkboxes('columns', Object.fromEntries(Object.entries(COLS).map(([f, c]) => [f, c.label])), (k) => !state.hidden.includes(k));
+    const drawMenus = (counts) => {
+        checkboxes('category', COLS.category.options, (k) => state.category.includes(k), counts.category);
+        checkboxes('publisher', COLS.publisher.options, (k) => state.publisher.includes(k), counts.publisher);
+        checkboxes('columns', Object.fromEntries(Object.entries(COLS).map(([f, c]) => [f, c.label])), (k) => !state.hidden.includes(k), counts.columns);
+    };
     markMenus();
 
     root.querySelectorAll('.bk-menu').forEach((menu) => menu.addEventListener('change', () => {
@@ -199,6 +202,7 @@ html.dark #bk { --bk-line: #393c42; --bk-head: #34373c; --bk-odd: #24262a; --bk-
         $('#bk-last').textContent = data.lastPage;
         root.querySelector('[data-go="-1"]').disabled = data.page <= 1;
         root.querySelector('[data-go="1"]').disabled = data.page >= data.lastPage;
+        drawMenus(data.counts);
         draw();
     }
 

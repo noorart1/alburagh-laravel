@@ -35,6 +35,12 @@ class BookCatalog extends Model
         ];
     }
 
+    /** @return array<string, int> books per value of $field ('' for empty) */
+    public static function countsBy(string $field): array
+    {
+        return static::query()->selectRaw("{$field} as k, count(*) as c")->groupBy($field)->pluck('c', 'k')->map(fn ($c) => (int) $c)->all();
+    }
+
     /** @return array<string, string> */
     public static function publisherOptions(): array
     {

@@ -139,6 +139,27 @@ class ListBookCatalogs extends ListRecords
             'total' => $books->total(),
             'lastPage' => $books->lastPage(),
             'page' => $books->currentPage(),
+            'counts' => static::bookCounts(),
+        ];
+    }
+
+    /**
+     * Whole-table counts for the toolbar menus: books per category/publisher,
+     * and per column how many books have a value in it.
+     *
+     * @return array{category: array<string, int>, publisher: array<string, int>, columns: array<string, int>}
+     */
+    protected static function bookCounts(): array
+    {
+        // nullif(x, '') only on text: MySQL would treat a numeric 0 as '' and skip it
+        $filled = BookCatalog::query()->selectRaw(collect(static::bookColumns())
+            ->map(fn (array $c, string $f): string => ($c['type'] === 'number' ? "count({$f})" : "count(nullif({$f}, ''))")." as {$f}")
+            ->implode(', '))->toBase()->first();
+
+        return [
+            'category' => BookCatalog::countsBy('category'),
+            'publisher' => BookCatalog::countsBy('publisher'),
+            'columns' => array_map('intval', (array) $filled),
         ];
     }
 

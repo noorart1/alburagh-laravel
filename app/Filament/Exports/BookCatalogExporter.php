@@ -8,6 +8,7 @@ use Filament\Actions\Exports\Exporter;
 use Filament\Actions\Exports\Models\Export;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
+use Filament\Schemas\Components\Text;
 use OpenSpout\Common\Entity\Row;
 use OpenSpout\Common\Entity\Style\Border;
 use OpenSpout\Common\Entity\Style\BorderPart;
@@ -33,7 +34,17 @@ class BookCatalogExporter extends Exporter
     {
         $ar = app()->getLocale() === 'ar';
 
+        // book counts per option; not in the column names, which import matches on
+        $counts = fn (string $title, array $options, string $field): Text => Text::make(function () use ($title, $options, $field): string {
+            $n = BookCatalog::countsBy($field);
+
+            return $title.': '.collect($options)->map(fn (string $label, string $key): string => "{$label} (".($n[$key] ?? 0).')')->implode(' · ');
+        });
+
         return [
+            $counts($ar ? 'الصنف' : 'Category', BookCatalog::categoryOptions(), 'category'),
+            $counts($ar ? 'الناشر' : 'Publisher', BookCatalog::publisherOptions(), 'publisher'),
+
             Select::make('export_scope')
                 ->label($ar ? 'السجلات المطلوب تصديرها' : 'Rows to export')
                 ->options([

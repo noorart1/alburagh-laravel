@@ -135,7 +135,11 @@ class InvoiceTest extends TestCase
         BookCatalog::create(['catalog_number' => 2, 'title' => 'y', 'category' => 'game']);
 
         $list = Livewire::test(ListBookCatalogs::class);
-        $list->instance()->fetchBooks(['category' => ['game']]);
+        $counts = $list->instance()->fetchBooks(['category' => ['game']])['counts'];
+        // menu counts are whole-table, not filtered
+        $this->assertSame(['book' => 1, 'game' => 1], $counts['category']);
+        $this->assertSame(2, $counts['columns']['title']);
+        $this->assertSame(0, $counts['columns']['barcode']);
         // columns used to default to the (now gone) Filament table's visible ones: none → nothing exported
         $list->callAction('exportExcel')->assertHasNoActionErrors();
 
