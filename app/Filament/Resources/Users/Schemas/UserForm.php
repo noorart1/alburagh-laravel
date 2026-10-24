@@ -23,7 +23,8 @@ class UserForm
 
                         TextInput::make('username')
                             ->label(__('admin.username'))
-                            ->maxLength(60),
+                            ->maxLength(60)
+                            ->unique(ignoreRecord: true),
 
                         TextInput::make('email')
                             ->label(__('admin.email'))

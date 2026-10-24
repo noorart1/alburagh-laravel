@@ -43,8 +43,13 @@ class User extends Authenticatable implements FilamentUser
     {
         return $this->hasMany(UserSubscription::class);
     }
-    public function checkAppPassword(string $password): bool
+    public function checkAppPassword(?string $password): bool
     {
+        // اپ گاهی رمز خالی می‌فرستد؛ رمز خالی همیشه اشتباه است.
+        if ($password === null || $password === '') {
+            return false;
+        }
+
         // ابتدا رمز Laravel را بررسی کن.
         if (
             $this->password &&
