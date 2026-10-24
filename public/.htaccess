@@ -1,6 +1,10 @@
 <IfModule mod_rewrite.c>
     RewriteEngine On
 
+    # BEGIN claude-protect: no PHP execution here (uploads live in storage/; app runs from ../index.php)
+    RewriteRule \.(php\d?|phtml|phar)$ - [F,L]
+    # END claude-protect
+
     RewriteCond %{REQUEST_FILENAME} !-d
     RewriteCond %{REQUEST_FILENAME} !-f
 

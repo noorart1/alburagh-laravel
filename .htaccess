@@ -3,6 +3,13 @@ CacheLookup off
 <IfModule mod_rewrite.c>
     RewriteEngine On
 
+    # BEGIN claude-protect: project root is web-exposed; serve only index.php and real assets
+    RewriteRule ^.+/[^/]*\.(php\d?|phtml|phar)$ - [F,L]
+    RewriteCond %{REQUEST_FILENAME} -f [OR]
+    RewriteCond %{REQUEST_FILENAME} -d
+    RewriteRule !^(index\.php|(css|js|fonts)/.*|public/(css|js|fonts|images|storage)/.*|logo\.png|favicon\.ico|robots\.txt)?$ - [F,L]
+    # END claude-protect
+
     RewriteCond %{REQUEST_FILENAME} !-d
     RewriteCond %{REQUEST_FILENAME} !-f
 
