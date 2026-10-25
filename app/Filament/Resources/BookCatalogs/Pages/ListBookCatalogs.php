@@ -332,7 +332,8 @@ class ListBookCatalogs extends ListRecords
         $fieldsByLabel = collect(BookCatalogExporter::getColumns())
             ->mapWithKeys(fn ($column) => [BookCatalogExporter::withoutCount($column->getLabel()) => $column->getName()]);
 
-        $categoryKeysByLabel = array_flip(BookCatalog::categoryOptions());
+        // old label kept so Excel files exported before the rename still import
+        $categoryKeysByLabel = array_flip(BookCatalog::categoryOptions()) + ['كتاب إسلامية' => 'islamic_books'];
         $publisherKeysByLabel = array_flip(BookCatalog::publisherOptions());
 
         $reader = new XlsxReader();
