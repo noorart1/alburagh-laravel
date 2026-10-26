@@ -30,6 +30,7 @@ class BookCatalog extends Model
             'islamic_series' => $ar ? 'سلسلة إسلامية' : 'Islamic Series',
             'islamic_books' => $ar ? 'كتاب إسلامي' : 'Islamic Book',
             'islamic_part' => $ar ? 'جزء إسلامي' : 'Islamic Part',
+            'islamic_game' => $ar ? 'لعبة إسلامية' : 'Islamic Game',
             'frozen' => $ar ? 'تجميد' : 'Frozen',
         ];
     }
